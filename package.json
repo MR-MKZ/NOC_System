@@ -1,0 +1,39 @@
+{
+  "type": "module",
+  "name": "noc_system_backend",
+  "version": "0.0.1",
+  "description": "NOC system backend",
+  "main": "./index.js",
+  "author": "Mr.MKZ",
+  "license": "ISC",
+  "scripts": {
+    "start": "nodemon index.js",
+    "serve": "node index.js",
+    "migrate": "npx prisma migrate dev -n noc-system-migration",
+    "seed": "npx prisma db seed",
+    "cleanDb": "node ./prisma/cleanup.js"
+  },
+  "prisma": {
+    "seed": "node prisma\\seed.js"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/morgan": "^1.9.9",
+    "express": "^4.19.2",
+    "nodemon": "^3.1.4"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0",
+    "axios": "^1.7.3",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "prisma": "^5.18.0",
+    "yup": "^1.4.0"
+  }
+}

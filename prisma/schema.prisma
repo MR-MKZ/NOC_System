@@ -1,0 +1,69 @@
+datasource db {
+    provider = "postgres"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+// model Ticket {
+//     id          Int      @id @default(autoincrement())
+//     title       String
+//     description String
+//     status      String
+//     priorityId  Int?
+//     categoryId  Int
+//     createdBy   Int
+//     assignedTo  Int?
+//     createdDate DateTime @default(now())
+//     updatedDate DateTime @updatedAt
+
+//     priority       Priority?        @relation(fields: [priorityId], references: [id])
+//     creator        User            @relation("CreatedTickets", fields: [createdBy], references: [id])
+//     assignee       User?           @relation("AssignedTickets", fields: [assignedTo], references: [id])
+//     category       Category        @relation(fields: [categoryId], references: [id])
+//     ticketMessages TicketMessage[]
+// }
+
+// model TicketMessage {
+//     id          Int      @id @default(autoincrement())
+//     ticketId    Int
+//     message     String
+//     userId      Int
+//     createdDate DateTime @default(now())
+//     updatedDate DateTime @updatedAt
+//     Ticket      Ticket  @relation(fields: [ticketId], references: [id])
+//     user        User?    @relation(fields: [userId], references: [id])
+// }
+
+// model Priority {
+//     id          Int      @id @default(autoincrement())
+//     level       String
+//     description String
+//     tickets     Ticket[]
+// }
+
+model User {
+    id              Int             @id @default(autoincrement())
+    name            String?
+    username        String          @unique
+    password        String
+    email           String          @unique
+    roleId          Int
+    role            Role            @relation(fields: [roleId], references: [id])
+}
+
+model Role {
+    id          Int    @id @default(autoincrement())
+    name        String
+    englishName String
+    users       User[]
+}
+
+// model Category {
+//     id          Int      @id @default(autoincrement())
+//     name        String
+//     description String
+//     tickets     Ticket[]
+// }
