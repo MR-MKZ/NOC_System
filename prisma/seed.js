@@ -2,44 +2,36 @@ import { PrismaClient } from "@prisma/client"
 const prisma = new PrismaClient();
 
 const roles = [
-    { name: 'مدیر', englishName: 'admin' },
-    { name: 'پشتیبانی', englishName: 'support' },
-    { name: 'کاربر', englishName: 'user' }
+    { name: 'Admin' },    // roleId: 1
+    { name: 'Team_724' }, // roleId: 2
+    { name: 'Head' },     // roleId: 3
+    { name: 'Member' }    // roleId: 4
 ];
-
-// const categories = [
-//     { name: 'تکنیکی', description: 'مشکلات فنی' },
-//     { name: 'مالی', description: 'مسائل مالی' },
-//     { name: 'عمومی', description: 'سوالات عمومی' }
-// ];
-
-// const priorities = [
-//     { level: 'high', description: 'اولویت بالا' },
-//     { level: 'medium', description: 'اولویت متوسط' },
-//     { level: 'low', description: 'اولویت پایین' }
-// ];
 
 const users = [
     {
-        name: "مهران",
         username: "admin",
         password: "$2b$10$nFJrIN8awhhCoiWOOa9cUe54Exip4a.8K6Uux3zpeH86i0QbvsyLq",
         email: "admin@example.com",
-        roleId: 1 // Assuming roleId is 1 for admin
+        role_id: 1 // Assuming roleId is 1 for admin
     },
     {
-        name: "علیرضا",
-        username: "support",
+        username: "team724",
         password: "$2b$10$nFJrIN8awhhCoiWOOa9cUe54Exip4a.8K6Uux3zpeH86i0QbvsyLq",
-        email: "support@example.com",
-        roleId: 2 // Assuming roleId is 2 for support
+        email: "724@example.com",
+        role_id: 2 // Assuming roleId is 2 for team 724
     },
     {
-        name: "محمد",
-        username: "user",
+        username: "team.head",
         password: "$2b$10$nFJrIN8awhhCoiWOOa9cUe54Exip4a.8K6Uux3zpeH86i0QbvsyLq",
-        email: "user@example.com",
-        roleId: 3 // Assuming roleId is 3 for user
+        email: "head@example.com",
+        role_id: 3 // Assuming roleId is 3 for head
+    },
+    {
+        username: "member",
+        password: "$2b$10$nFJrIN8awhhCoiWOOa9cUe54Exip4a.8K6Uux3zpeH86i0QbvsyLq",
+        email: "member@example.com",
+        role_id: 4 // Assuming roleId is 3 for member
     }
 ];
 
@@ -76,31 +68,17 @@ const users = [
 // ];
 
 async function main() {
+    console.time("seeding")
+    
     for (const role of roles) {
         await prisma.role.create({ data: role });
     }
-
-    // for (const category of categories) {
-    //     await prisma.category.create({ data: category });
-    // }
-
-    // for (const priority of priorities) {
-    //     await prisma.priority.create({ data: priority });
-    // }
 
     for (const user of users) {
         await prisma.user.create({ data: user });
     }
 
-    // for (const ticket of tickets) {
-    //     await prisma.ticket.create({ data: ticket });
-    // }
-
-    // for (const ticketMessage of ticketMessages) {
-    //     await prisma.ticketMessage.create({ data: ticketMessage });
-    // }
-
-    console.log('Seeding finished.');
+    console.timeEnd("seeding")
 }
 
 main()

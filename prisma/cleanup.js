@@ -2,12 +2,12 @@ const prisma = require('../config/database');
 
 async function cleanup() {
     const tableNames = [
-        'TicketMessage',
-        'Ticket',
         'User',
-        'Priority',
-        'Category',
-        'Role'
+        'Role',
+        'Team',
+        'Notification',
+        'AlertPack',
+        'IncidentReport'
     ];
 
     for (const tableName of tableNames) {
