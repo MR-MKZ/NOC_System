@@ -13,25 +13,25 @@ const users = [
         username: "admin",
         password: "$2b$10$nFJrIN8awhhCoiWOOa9cUe54Exip4a.8K6Uux3zpeH86i0QbvsyLq",
         email: "admin@example.com",
-        role_id: 1 // Assuming roleId is 1 for admin
+        role_id: 1 // Assuming roleId 1 for admin
     },
     {
         username: "team724",
         password: "$2b$10$nFJrIN8awhhCoiWOOa9cUe54Exip4a.8K6Uux3zpeH86i0QbvsyLq",
         email: "724@example.com",
-        role_id: 2 // Assuming roleId is 2 for team 724
+        role_id: 2 // Assuming roleId 2 for team 724
     },
     {
         username: "team.head",
         password: "$2b$10$nFJrIN8awhhCoiWOOa9cUe54Exip4a.8K6Uux3zpeH86i0QbvsyLq",
         email: "head@example.com",
-        role_id: 3 // Assuming roleId is 3 for head
+        role_id: 3 // Assuming roleId 3 for head
     },
     {
         username: "member",
         password: "$2b$10$nFJrIN8awhhCoiWOOa9cUe54Exip4a.8K6Uux3zpeH86i0QbvsyLq",
         email: "member@example.com",
-        role_id: 4 // Assuming roleId is 3 for member
+        role_id: 4 // Assuming roleId 4 for member
     }
 ];
 

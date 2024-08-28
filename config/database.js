@@ -7,6 +7,10 @@ class PrismaClientSingleton {
         }
     }
 
+    /**
+     * An instance of prisma client
+     * @returns {import('@prisma/client').PrismaClient}
+     */
     getInstance() {
         return PrismaClientSingleton.instance;
     }

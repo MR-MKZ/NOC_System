@@ -1,4 +1,4 @@
-import { compare } from "bcrypt";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel.js";
 import { JWT_EXPIRE } from "../config/config.js";
@@ -6,7 +6,7 @@ import { JWT_EXPIRE } from "../config/config.js";
 const login = async (username, password, userAgent, isService=false) => {
   const user = await userModel.findByUsername(username);
 
-  if (!user || !(await compare(password, user.password))) {
+  if (!user || !(await bcrypt.compare(password, user.password))) {
     return null;
   }
   return jwt.sign(
