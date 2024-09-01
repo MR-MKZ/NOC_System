@@ -7,8 +7,8 @@
   "author": "Mr.MKZ",
   "license": "ISC",
   "scripts": {
-    "start": "nodemon index.js",
-    "serve": "node index.js",
+    "start": "DEV=true nodemon index.js",
+    "serve": "DEV=false node index.js",
     "migrate": "npx prisma migrate dev -n noc-system-migration",
     "seed": "npx prisma db seed",
     "cleanDb": "node ./prisma/cleanup.js"

@@ -15,7 +15,12 @@ import authenticateToken from "./middlewares/auth/authenticateToken.js";
 config();
 
 const app = express();
-const port = Number(process.env.PORT) || 8000;
+let port;
+if (process.env.DEV == "true")
+  port = Number(process.env.DEV_PORT) || 8001;
+else
+  port = Number(process.env.PORT) || 8000;
+
 const serveIp = process.env.SERVE_IP || "127.0.0.1";
 
 // Get the current module's filename
