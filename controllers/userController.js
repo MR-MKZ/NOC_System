@@ -68,10 +68,8 @@ const updateUser = async (req, res) => {
         newUser = await userService.updateUser(req, res);
         delete newUser["password"]
     } catch (error) {
-        console.log(error);
-        
         return res.status(error.code).json({
-            error: error.message,
+            message: error.message,
             data: error.data
         })
     }
@@ -80,8 +78,6 @@ const updateUser = async (req, res) => {
         data: newUser
     })
 }
-
-// TODO: update user validation is not completed. [Not Secure]
 
 export default {
     createUser,

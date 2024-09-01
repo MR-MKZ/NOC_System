@@ -1,6 +1,10 @@
-import { getPack, createPack, closePack, getAllIncidents } from "../models/packModel.js";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { getPack, createPack, closePack, getAllIncidents, updatePackById } from "../models/packModel.js";
 import { getAllPacks } from "../models/packModel.js";
+import { BadRequestException, NotFoundException, ServerException } from "../utils/customException.js";
 import paginate from "../utils/paginator.js";
+import { packPrioritySchema } from "../utils/schema.js";
+import * as yup from "yup";
 
 export async function handlePack(fingerprint, status, isTest) {
   if (isTest) return null;
@@ -89,4 +93,41 @@ export async function sendIncidentPackService(req, res) {
   }
 
   return res.status(200).json(req.query.page == "off" ? packs : paginate(packs, page, pageSize));
+}
+
+/**
+ * handle setting priority for pack
+ * @param {number} packId 
+ * @param {"Low" | "Medium" | "High"} priority 
+ */
+export async function setPackPriority(packId, priority) {
+  try {
+    await packPrioritySchema.validate({
+      id: packId,
+      priority: priority
+    })
+
+    await updatePackById({
+      id: packId,
+      data: {
+        priority: priority
+      }
+    })
+  } catch (error) {
+    if (error instanceof yup.ValidationError) {
+      throw new BadRequestException({
+        msg: "data validation error",
+        data: error.errors
+      })
+    } else if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new NotFoundException({
+          msg: "Pack not found"
+        })
+      }
+    } else {
+      console.log(error);
+      throw new ServerException({ msg: "Internal server error, please try again later" });
+    }
+  }
 }

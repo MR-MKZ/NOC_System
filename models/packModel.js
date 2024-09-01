@@ -146,3 +146,12 @@ export const closePack = async ({ id }) => {
     },
   });
 };
+
+export const updatePackById = async ({ id, data }) => {
+  return await prisma.alertPack.update({
+    where: {
+      id: id
+    },
+    data: data
+  })
+}

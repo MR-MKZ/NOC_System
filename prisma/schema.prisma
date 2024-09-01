@@ -52,6 +52,7 @@ model AlertPack {
     id               Int            @id @default(autoincrement())
     fingerprint      String
     type             NotifTypes?    @default(Alert)
+    priority         Priority?
     master_memberId  Int?
     master_member    User?          @relation(fields: [master_memberId], references: [id])
     assigned_team_id Int?

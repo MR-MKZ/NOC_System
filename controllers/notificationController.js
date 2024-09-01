@@ -1,5 +1,5 @@
-
-import { sendIncidentPackService, sendPackService } from "../services/packService.js";
+import capitalize from "../utils/capitalize.js";
+import { sendIncidentPackService, sendPackService, setPackPriority } from "../services/packService.js";
 import { sendNotificationService } from "../services/notificationService.js";
 
 /**
@@ -44,8 +44,33 @@ const handleSendNotifications = async (req, res) => {
     }
 }
 
+/**
+ * fetch, paginate and send notification to user
+ * @param {import('express').Request} req 
+ * @param {import('express').Response} res 
+ */
+const handlePackPriority = async (req, res) => {
+    try {
+        let { id, priority } = req.body;
+        id = Number(id) || undefined
+        priority = capitalize(priority)
+
+        await setPackPriority(id, priority)
+    } catch (error) {
+        return res.status(error.code).json({
+            message: error.message,
+            data: error.data
+        })
+    }
+
+    return res.status(200).json({
+        message: "Priority changed successfully"
+    });
+}
+
 export default {
     handleSendPacks,
     handleSendIncidentPacks,
-    handleSendNotifications
+    handleSendNotifications,
+    handlePackPriority
 };

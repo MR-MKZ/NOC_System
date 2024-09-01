@@ -6,7 +6,7 @@ const router = Router()
 router.get('/', notificationController.handleSendPacks);
 router.get('/incidents', notificationController.handleSendIncidentPacks);
 router.get('/:id', notificationController.handleSendNotifications)
-// router.post('/priority', )
+router.post('/priority', notificationController.handlePackPriority)
 
 export {
     router as v1NotificationRoutes
