@@ -9,10 +9,7 @@ const webhookController = async (req, res) => {
   }
 
   try {        
-    const aiWebhookData = await processAlerts(req.body.alerts, req.body.status, req.body.orgId, req.headers.test);
-    for (const alert of aiWebhookData) {
-        await callAiWebhook(alert);
-    }
+    await processAlerts(req.body.alerts, req.body.status, req.body.orgId, req.headers.test);
     
     return res.status(200).json({ message: "Webhook received" });
   } catch (error) {

@@ -1,27 +1,43 @@
-import { verify } from 'jsonwebtoken';
-import { messages } from '../config/messages';
-import { isAdmin } from '../services/authService';
+import jwt from 'jsonwebtoken';
+import { messages } from '../config/messages.js';
+import authService from '../services/authService.js';
 
 const userIsAdmin = async (req, res, next) => {
     try {
-        const token = req.body.token || req.query.token || req.headers['authorization']?.split(' ')[1];
+        let token = req.headers['authorization'];
+        token = token.split("Bearer")
+        token = token[1].trim()
+        
         if (!token) {
-            return res.status(messages.UNAUTHORIZED.code).json(messages.UNAUTHORIZED.message);
+            return res.status(messages.UNAUTHORIZED.code).json({
+                message: messages.UNAUTHORIZED.message
+            });
         }
 
-        const tokenData = verify(token, process.env.JWT_SECRET);
-        const { userId } = tokenData;
+        const tokenData = jwt.verify(token, process.env.JWT_SECRET);
+        let { userId } = tokenData;
+        userId = parseInt(userId)
 
-        const adminCheck = await isAdmin(userId);
+        if (isNaN(userId)) {
+            return res.status(messages.UNAUTHORIZED.code).json({
+                message: messages.UNAUTHORIZED.message
+            });
+        }
+
+        const adminCheck = await authService.isAdmin(userId);
         if (adminCheck) {
             return next();
         }
 
-        return res.status(messages.UNAUTHORIZED.code).json(messages.UNAUTHORIZED.message);
+        return res.status(messages.UNAUTHORIZED.code).json({
+            message: messages.UNAUTHORIZED.message
+        });
     } catch (error) {
         console.error(error);
-        return res.status(messages.SERVER_ERROR.code).json(messages.SERVER_ERROR.message);
+        return res.status(messages.SERVER_ERROR.code).json({
+            message: messages.SERVER_ERROR.message
+        });
     }
 };
 
-module.exports = userIsAdmin;
+export default userIsAdmin

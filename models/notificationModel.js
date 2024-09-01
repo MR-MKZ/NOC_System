@@ -27,25 +27,41 @@ export const saveNotication = async ({
 };
 
 export const getPackNotifications = async (packId, skip, take) => {
-  let notifications = await prisma.notification.findMany({
-    where: {
-      pack_id: packId
-    },
-    orderBy: {
-      receive_time: "desc"
-    },
-    skip: skip,
-    take: take
-  })
+  let notifications;
+  let totalNotifications;  
 
-  let totalNotifications = await prisma.notification.count({
-    where: {
-      pack_id: packId
-    }
-  });
+  if (skip == "off") {
+    notifications = await prisma.notification.findMany({
+      where: {
+        pack_id: packId
+      },
+      orderBy: {
+        receive_time: "desc"
+      }
+    })
 
-  return notifications ? {
-    notifications: notifications,
-    total: totalNotifications
-  } : undefined
+    return notifications || undefined
+  } else {
+    notifications = await prisma.notification.findMany({
+      where: {
+        pack_id: packId
+      },
+      orderBy: {
+        receive_time: "desc"
+      },
+      skip: skip,
+      take: take
+    })
+
+    totalNotifications = await prisma.notification.count({
+      where: {
+        pack_id: packId
+      }
+    });
+
+    return notifications ? {
+      notifications: notifications,
+      total: totalNotifications
+    } : undefined
+  }
 }

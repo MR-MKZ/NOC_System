@@ -8,15 +8,14 @@ generator client {
 }
 
 model User {
-    id                   Int            @id @default(autoincrement())
-    username             String         @unique
-    password             String
-    email                String         @unique
-    role_id              Int
-    role                 Role           @relation(fields: [role_id], references: [id])
-    team                 Team[]
-    alert_pack           AlertPack[]
-    notification_decicer Notification[]
+    id         Int         @id @default(autoincrement())
+    username   String      @unique
+    password   String
+    email      String      @unique
+    role_id    Int
+    role       Role        @relation(fields: [role_id], references: [id])
+    team       Team[]
+    alert_pack AlertPack[]
 }
 
 model Role {
@@ -28,21 +27,19 @@ model Role {
 model Team {
     id         Int         @id @default(autoincrement())
     name       String
-    heade_id   Int
-    head       User        @relation(fields: [heade_id], references: [id])
+    head_id    Int
+    head       User        @relation(fields: [head_id], references: [id])
     alert_pack AlertPack[]
 }
 
 model Notification {
     id                Int         @id @default(autoincrement())
-    decider_id        Int?
-    decider           User?       @relation(fields: [decider_id], references: [id])
-    type              NotifTypes?
+    type              NotifTypes? @default(Alert)
+    priority          Priority?
     text              String
     service           String
     service_addr      String
     receive_time      DateTime    @default(now())
-    action_delay      String?
     alert_create_time DateTime
     resolve_time      DateTime?
     values            Json
@@ -54,16 +51,17 @@ model Notification {
 model AlertPack {
     id               Int            @id @default(autoincrement())
     fingerprint      String
-    type             NotifTypes?
+    type             NotifTypes?    @default(Alert)
     master_memberId  Int?
     master_member    User?          @relation(fields: [master_memberId], references: [id])
     assigned_team_id Int?
     assigned_team    Team?          @relation(fields: [assigned_team_id], references: [id])
     status           Status         @default(Alert)
-    priority         Priority?
     in_progress_time DateTime?
     finish_time      DateTime?
     elapsed_time     String?
+    start_at         DateTime       @default(now())
+    end_at           DateTime?
     notifications    Notification[]
 }
 

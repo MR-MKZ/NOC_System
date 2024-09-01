@@ -21,7 +21,13 @@ const findByUsername = async (username) => {
 const findById = async (userId) => {
     return await prisma.user.findUnique({
         where: { id: userId },
-        include: { role: true }
+        include: {
+            role: {
+                select: {
+                    name: true
+                }
+            }
+        }
     });
 };
 
@@ -46,15 +52,30 @@ const addUser = async ({
     })
 }
 
-// {
-//     username: "member",
-//     password: "$2b$10$nFJrIN8awhhCoiWOOa9cUe54Exip4a.8K6Uux3zpeH86i0QbvsyLq",
-//     email: "member@example.com",
-//     role_id: 4 // Assuming roleId is 3 for member
-// }
+const deleteById = async (userId) => {
+    return await prisma.user.delete({
+        where: {
+            id: userId
+        }
+    })
+}
+
+const updateById = async ({
+    id,
+    updatedData
+}) => {
+    return await prisma.user.update({
+        where: {
+            id: id
+        },
+        data: updatedData
+    })
+}
 
 export default {
     findByUsername,
     findById,
-    addUser
+    addUser,
+    deleteById,
+    updateById
 }

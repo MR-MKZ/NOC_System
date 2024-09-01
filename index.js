@@ -9,6 +9,7 @@ import morgan from "morgan";
 import { v1AuthRoutes } from "./api/v1/auth.js";
 import { v1WebhookRoutes } from "./api/v1/webhook.js";
 import { v1NotificationRoutes } from "./api/v1/notifications.js";
+import { v1UserRoutes } from "./api/v1/user.js";
 import authenticateToken from "./middlewares/auth/authenticateToken.js";
 
 config();
@@ -35,7 +36,8 @@ app.use(morgan("combined", { stream: accessLogStream }));
 // api v1 routes
 app.use("/api/v1/auth", v1AuthRoutes);
 app.use("/api/v1/webhook", authenticateToken, v1WebhookRoutes);
-app.use('/api/v1/notifications', authenticateToken, v1NotificationRoutes);
+app.use("/api/v1/notifications", authenticateToken, v1NotificationRoutes);
+app.use("/api/v1/user", authenticateToken, v1UserRoutes);
 
 // return 404 to all unknown routes
 app.all("*", function (req, res) {

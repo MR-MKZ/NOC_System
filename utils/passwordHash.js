@@ -6,7 +6,8 @@ import bcrypt from "bcrypt"
  * @returns hashed password
  */
 const hashPassword = (password) => {
-    const salt = process.env.HASH_SALT
+    const salt = "$2b$10$2DFh6v2katdIWq0dGXJb5O"
+
     return bcrypt.hashSync(password, salt)
 }
 

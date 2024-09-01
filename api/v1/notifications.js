@@ -4,7 +4,9 @@ import notificationController from "../../controllers/notificationController.js"
 const router = Router()
 
 router.get('/', notificationController.handleSendPacks);
+router.get('/incidents', notificationController.handleSendIncidentPacks);
 router.get('/:id', notificationController.handleSendNotifications)
+// router.post('/priority', )
 
 export {
     router as v1NotificationRoutes

@@ -7,8 +7,6 @@ import {
 
 export async function processAlerts(alerts, status, orgId, isTest) {
   if (isTest) return null;
-  
-  const aiWebhookData = [];
 
   for (const alertItem of alerts) {
     const alertData = parseAlertItem(alertItem);
@@ -21,20 +19,6 @@ export async function processAlerts(alerts, status, orgId, isTest) {
         pack.id
       );
       await saveNotification(notificationData);
-      aiWebhookData.push(prepareAiWebhookData(alertData, status));
     }
   }
-
-  return aiWebhookData;
-}
-
-export function prepareAiWebhookData(alertData, status) {
-  return {
-    Title: alertData.text,
-    Service: alertData.service,
-    Status: status,
-    Value: alertData.values,
-    StartAt: alertData.startAt,
-    EndAt: alertData.endAt,
-  };
 }

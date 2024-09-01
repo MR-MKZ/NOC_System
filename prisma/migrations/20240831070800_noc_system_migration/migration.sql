@@ -61,6 +61,7 @@ CREATE TABLE "Notification" (
 CREATE TABLE "AlertPack" (
     "id" SERIAL NOT NULL,
     "fingerprint" TEXT NOT NULL,
+    "type" "NotifTypes",
     "master_memberId" INTEGER,
     "assigned_team_id" INTEGER,
     "status" "Status" NOT NULL DEFAULT 'Alert',
