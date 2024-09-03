@@ -39,6 +39,18 @@ const createUser = async (req, res) => {
                 msg: "data validation error",
                 data: error.errors
             })
+        } else {
+            throw new ServerException({
+                msg: "Internal server error, please try again later.",
+                data: {
+                    meta: {
+                        location: 'teamService',
+                        operation: 'createUser',
+                        time: new Date().toLocaleTimeString(),
+                        date: new Date().toLocaleDateString()
+                    }
+                }
+            })
         }
     }
     delete user["password"]
@@ -112,6 +124,17 @@ const allUsers = async (skip, take) => {
         return await userModel.all(skip, take);
     } catch (error) {
         console.log(error);
+        throw new ServerException({
+            msg: 'Internal server error, please try again later.',
+            data: {
+                meta: {
+                    location: 'userService',
+                    operation: 'allUsers',
+                    time: new Date().toLocaleTimeString(),
+                    date: new Date().toLocaleDateString()
+                }
+            }
+        })
     }
 }
 

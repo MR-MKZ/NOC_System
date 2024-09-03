@@ -1,0 +1,14 @@
+import { Router } from "express";
+import userIsAdmin from "../../middlewares/userIsAdmin.js";
+import teamController from "../../controllers/teamController.js";
+
+const router = Router()
+
+router.post('/', userIsAdmin, teamController.createTeam)
+router.put('/:id', userIsAdmin, teamController.updateTeam)
+router.delete('/:id', userIsAdmin, teamController.deleteTeam)
+router.post('/:id/member', userIsAdmin, teamController.addTeamMember)
+
+export {
+    router as v1TeamRoutes
+}

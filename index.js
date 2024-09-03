@@ -10,6 +10,7 @@ import { v1AuthRoutes } from "./api/v1/auth.js";
 import { v1WebhookRoutes } from "./api/v1/webhook.js";
 import { v1NotificationRoutes } from "./api/v1/notifications.js";
 import { v1UserRoutes } from "./api/v1/user.js";
+import { v1TeamRoutes } from "./api/v1/team.js";
 import authenticateToken from "./middlewares/auth/authenticateToken.js";
 
 config();
@@ -43,6 +44,7 @@ app.use("/api/v1/auth", v1AuthRoutes);
 app.use("/api/v1/webhook", authenticateToken, v1WebhookRoutes);
 app.use("/api/v1/pack", authenticateToken, v1NotificationRoutes);
 app.use("/api/v1/user", authenticateToken, v1UserRoutes);
+app.use("/api/v1/team", authenticateToken, v1TeamRoutes);
 
 // return 404 to all unknown routes
 app.all("*", function (req, res) {

@@ -66,7 +66,15 @@ export async function sendPackService(req, res) {
     } else {
       console.log(error);
       throw new ServerException({
-        msg: "Internal server error, please try again later."
+        msg: "Internal server error, please try again later.",
+        data: {
+          meta: {
+            location: 'packService',
+            operation: 'sendPack',
+            time: new Date().toLocaleTimeString(),
+            date: new Date().toLocaleDateString()
+          }
+        }
       })
     }
   }
@@ -139,7 +147,17 @@ export async function setPackPriority(packId, priority) {
       }
     } else {
       console.log(error);
-      throw new ServerException({ msg: "Internal server error, please try again later" });
+      throw new ServerException({
+        msg: "Internal server error, please try again later.",
+        data: {
+          meta: {
+            location: 'packService',
+            operation: 'setPackPriority',
+            time: new Date().toLocaleTimeString(),
+            date: new Date().toLocaleDateString()
+          }
+        }
+      });
     }
   }
 }
