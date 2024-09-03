@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "noc_system_backend",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "NOC system backend",
   "main": "./index.js",
   "author": "Mr.MKZ",

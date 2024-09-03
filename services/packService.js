@@ -1,4 +1,4 @@
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { PrismaClientKnownRequestError, PrismaClientValidationError } from "@prisma/client/runtime/library";
 import { getPack, createPack, closePack, getAllIncidents, updatePackById } from "../models/packModel.js";
 import { getAllPacks } from "../models/packModel.js";
 import { BadRequestException, NotFoundException, ServerException } from "../utils/customException.js";
@@ -28,13 +28,11 @@ export async function sendPackService(req, res) {
   try {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.size) || 5;
-    const status = req.query.status || "Alert"
-
-    const skip = (page - 1) * pageSize;
-    const take = pageSize;
+    const status = req.query.status || "Alert";
+    const startId = parseInt(req.query.start_id) || 1;
 
     // Fetch items with pagination
-    const items = await getAllPacks(status, skip, take)
+    const items = await getAllPacks(status, startId)
 
     const packs = items.packs
 
@@ -48,15 +46,29 @@ export async function sendPackService(req, res) {
     const totalPages = Math.ceil(totalItems / pageSize);
 
     if (packs.length > 0 && page > totalPages) {
-      return res.status(404).json({
-        error: `page ${page} not found.`
+      throw new NotFoundException({
+        msg: `page ${page} not found.`
       })
     }
 
-    return res.status(200).json(req.query.page == "off" ? packs : paginate(packs, page, pageSize));
+    return req.query.page == "off" ? packs : paginate(packs, page, pageSize)
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal server error" });
+    if (error instanceof PrismaClientValidationError) {
+      console.log(error.message);
+
+      throw new BadRequestException({
+        msg: error.message
+      })
+    } else if (error instanceof BadRequestException) {
+      throw new BadRequestException({
+        msg: error.message
+      })
+    } else {
+      console.log(error);
+      throw new ServerException({
+        msg: "Internal server error, please try again later."
+      })
+    }
   }
 }
 

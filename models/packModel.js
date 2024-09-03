@@ -1,9 +1,9 @@
 import { prismaClientInstance as prisma } from "../config/database.js";
-import paginate from "../utils/paginator.js"
+import { BadRequestException } from "../utils/customException.js";
 
 /**
  * 
- * @typedef {'Alert' | 'Resolved' | 'Pending' | 'InProgress' | 'Done'} PackStatus
+ * @typedef {'Alert' | 'Resolved' | 'Pending' | 'InProgress' | 'Done' | 'All'} PackStatus
  */
 
 export const createPack = async ({ fingerprint }) => {
@@ -43,46 +43,77 @@ export const getPack = async ({ id, fingerprint }) => {
  * @param {PackStatus} packStatus 
  * @returns alert pack
  */
-export const getAllPacks = async (packStatus) => {
+export const getAllPacks = async (packStatus, startId) => {
   let packs;
   let total;
 
-  total = await prisma.alertPack.count({
-    where: {
-      status: packStatus,
-      OR: [
-        { type: "Alert" },
-        { type: null }
-      ]
-    }
-  })
+  const Status = ['Alert', 'Resolved', 'Pending', 'InProgress', 'Done', 'All']
 
-  packs = await prisma.alertPack.findMany({
-    where: {
-      status: packStatus,
-      OR: [
-        { type: "Alert" },
-        { type: null }
-      ]
-    },
-    orderBy: {
-      id: "desc"
-    },
-    include: {
-      notifications: {
-        orderBy: {
-          receive_time: 'desc',
-        },
-        select: {
-          service: true,
-          text: true,
-          alert_create_time: true,
-          receive_time: true
-        },
-        take: 1,
+  if (Status.indexOf(packStatus) < 0)
+    throw new BadRequestException({
+      msg: "status is not valid"
+    })
+
+  if (packStatus.toLowerCase() == "all") {
+    total = await prisma.alertPack.count()
+
+    packs = await prisma.alertPack.findMany({
+      cursor: {
+        id: startId
       },
-    }
-  });
+      orderBy: {
+        id: "asc"
+      },
+      include: {
+        notifications: {
+          select: {
+            service: true,
+            text: true,
+            alert_create_time: true,
+            receive_time: true
+          },
+          take: 1,
+        },
+      }
+    });
+  } else {
+    total = await prisma.alertPack.count({
+      where: {
+        status: packStatus,
+        OR: [
+          { type: "Alert" },
+          { type: null }
+        ]
+      }
+    })
+
+    packs = await prisma.alertPack.findMany({
+      where: {
+        status: packStatus,
+        OR: [
+          { type: "Alert" },
+          { type: null }
+        ]
+      },
+      orderBy: {
+        id: "desc"
+      },
+      include: {
+        notifications: {
+          orderBy: {
+            receive_time: 'desc',
+          },
+          select: {
+            service: true,
+            text: true,
+            alert_create_time: true,
+            receive_time: true
+          },
+          take: 1,
+        },
+      }
+    });
+  }
 
   return packs ? {
     packs: packs,

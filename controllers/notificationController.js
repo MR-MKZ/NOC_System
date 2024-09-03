@@ -8,12 +8,17 @@ import { sendNotificationService } from "../services/notificationService.js";
  * @param {import('express').Response} res 
  */
 const handleSendPacks = async (req, res) => {
+    let packs;
     try {
-        await sendPackService(req, res);
+        packs = await sendPackService(req, res);
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(error.code).json({
+            message: error.message,
+            data: error.data
+        })
     }
+
+    return res.status(200).json(packs || [])
 };
 
 /**
