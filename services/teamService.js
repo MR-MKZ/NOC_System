@@ -1,18 +1,48 @@
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import teamModel from "../models/teamModel.js";
 import userModel from "../models/userModel.js";
-import { BadRequestException, ServerException } from "../utils/customException";
+import { BadRequestException, NotFoundException, ServerException } from "../utils/customException.js";
+import * as yup from "yup";
+
+const updateTeamValidation = yup.object().shape({
+    name: yup.string(),
+    headId: yup.number()
+})
+
+const deleteTeamValidation = yup.number()
 
 const createTeam = async (name, head_id) => {
     try {
+        if (isNaN(Number(head_id)))
+            throw new BadRequestException({
+                msg: "headId must be number"
+            })
+
         let head = await userModel.findById(head_id)
-        
-        if (head) 
-            return await teamModel.create({ name, head_id })
-        else
+
+        if (!head)
             throw new BadRequestException({
                 msg: "User doesn't exist"
             })
+
+        if (head.role_id != 3)
+            throw new BadRequestException({
+                msg: "User must have Head role"
+            })
+
+        return await teamModel.create({ name, head_id })
     } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === "P2002") {
+                throw new BadRequestException({
+                    msg: "Team name must be unique"
+                })
+            }
+        } else if (error instanceof BadRequestException) {
+            throw new BadRequestException({
+                msg: error.message
+            })
+        }
         console.log(error);
         throw new ServerException({
             msg: "Internal server error. please try again later",
@@ -26,4 +56,103 @@ const createTeam = async (name, head_id) => {
             }
         })
     }
+}
+
+const updateTeam = async (id, data) => {
+    try {
+        let validatedData = await updateTeamValidation.validate(data)
+        let updatedData = {}
+
+        if (validatedData.headId) {
+            let head = await userModel.findById(validatedData.headId)
+
+            if (!head)
+                throw new BadRequestException({
+                    msg: "User doesn't exist"
+                })
+
+            if (head.role_id != 3)
+                throw new BadRequestException({
+                    msg: "User must have Head role"
+                })
+
+            if (head.team.length > 0)
+                throw new BadRequestException({
+                    msg: "User already added to a team"
+                })
+
+            updatedData.head_id = validatedData.headId
+        }
+
+        if (validatedData.name)
+            updatedData.name = validatedData.name
+
+        return await teamModel.updateById(id, updatedData)
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            throw new BadRequestException({
+                msg: "data validtion error",
+                data: error.errors
+            })
+        } else if (error instanceof NotFoundException) {
+            throw new NotFoundException({
+                msg: error.message
+            })
+        } else if (error instanceof BadRequestException) {
+            throw new BadRequestException({
+                msg: error.message
+            })
+        }
+        console.log(error);
+        throw new ServerException({
+            msg: "Internal server error. please try again later",
+            data: {
+                meta: {
+                    location: 'teamService',
+                    operation: 'updateTeam',
+                    time: new Date().toLocaleTimeString(),
+                    date: new Date().toLocaleDateString()
+                }
+            }
+        })
+    }
+}
+
+const deleteTeam = async (id) => {
+    try {
+        await deleteTeamValidation.validate(id)
+
+        return await teamModel.deleteById(id)
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            throw new BadRequestException({
+                msg: "data validation error",
+                data: error.errors
+            })
+        } else if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === "P2025") {
+                throw new NotFoundException({
+                    msg: "Team not found"
+                })
+            }
+        }
+        console.log(error);
+        throw new ServerException({
+            msg: "Internal server error. please try again later",
+            data: {
+                meta: {
+                    location: 'teamService',
+                    operation: 'deleteTeam',
+                    time: new Date().toLocaleTimeString(),
+                    date: new Date().toLocaleDateString()
+                }
+            }
+        })
+    }
+}
+
+export default {
+    createTeam,
+    updateTeam,
+    deleteTeam
 }

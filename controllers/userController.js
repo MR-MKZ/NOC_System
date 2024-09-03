@@ -1,6 +1,7 @@
 import { PrismaClientKnownRequestError, PrismaClientValidationError } from "@prisma/client/runtime/library";
 import userModel from "../models/userModel.js";
 import userService from "../services/userService.js"
+import { ServerException } from "../utils/customException.js";
 
 
 /**
@@ -119,8 +120,9 @@ const getAllUsers = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(500).json({
-            message: "Internal server error"
+        return res.status(error.code).json({
+            message: error.message,
+            data: error.data
         })
     }
 }

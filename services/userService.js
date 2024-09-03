@@ -16,7 +16,7 @@ const updateUserSchema = yup.object().shape({
     username: yup.string().trim(),
     password: yup.string().min(8).trim(),
     email: yup.string().email(),
-    role: yup.string().oneOf(["Team_724", "Head", "Member"], "User role should be one of this options: Team_724, Head, Member")
+    role_id: yup.string().oneOf(["Team_724", "Head", "Member"], "User role should be one of this options: Team_724, Head, Member")
 })
 
 /**
@@ -68,6 +68,13 @@ const updateUser = async (req, res) => {
         let { username, password, email, role } = req.body
         const userId = parseInt(req.params.id)
 
+        let user = await userModel.findById(userId)
+
+        if (role && user.team.length > 0) 
+            throw new BadRequestException({
+                msg: "You can't change role of user who added in a team"
+            })
+
         if (username)
             updatedData.username = username
 
@@ -78,19 +85,19 @@ const updateUser = async (req, res) => {
             updatedData.email = email
 
         if (role)
-            updatedData.role = role
+            updatedData.role_id = role
 
-        let validatedData = await updateUserSchema.validate(updatedData)
+        await updateUserSchema.validate(updatedData)
         
         if (password)
             updatedData.password = hashPassword(password)
         
         if (role)
-            updatedData.role = convertRole(role)
+            updatedData.role_id = convertRole(role)
 
         return await userModel.updateById({
             id: userId,
-            updatedData: validatedData
+            updatedData: updatedData
         })
     } catch (error) {
         if (error instanceof yup.ValidationError) {
@@ -107,6 +114,10 @@ const updateUser = async (req, res) => {
         } else if (error instanceof PrismaClientValidationError) {
             console.log(error.message);
             
+            throw new BadRequestException({
+                msg: error.message
+            })
+        } else if (error instanceof BadRequestException) {
             throw new BadRequestException({
                 msg: error.message
             })

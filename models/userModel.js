@@ -26,6 +26,14 @@ const findById = async (userId) => {
                 select: {
                     name: true
                 }
+            },
+            team: {
+                select: {
+                    id: true,
+                    name: true,
+                    head: true,
+                    alert_pack: true
+                }
             }
         }
     });

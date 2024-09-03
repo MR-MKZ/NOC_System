@@ -35,37 +35,14 @@ const users = [
     }
 ];
 
-// const tickets = [
-//     {
-//         title: "مشکل اتصال به شبکه",
-//         description: "کاربران نمی‌توانند به شبکه متصل شوند.",
-//         status: "باز",
-//         priorityId: 1, // Assuming priorityId is 1 for high priority
-//         categoryId: 1, // Assuming categoryId is 1 for technical
-//         createdBy: 1 // Assuming createdBy is 1 for admin
-//     },
-//     {
-//         title: "مشکل پرداخت",
-//         description: "پرداخت‌ها از طریق درگاه بانکی با مشکل مواجه شده است.",
-//         status: "در حال بررسی",
-//         priorityId: 2, // Assuming priorityId is 2 for medium priority
-//         categoryId: 2, // Assuming categoryId is 2 for financial
-//         createdBy: 2 // Assuming createdBy is 2 for support
-//     }
-// ];
-
-// const ticketMessages = [
-//     {
-//         ticketId: 1, // Assuming ticketId is 1 for first ticket
-//         message: "این مشکل در حال بررسی است.",
-//         userId: 1 // Assuming userId is 1 for admin
-//     },
-//     {
-//         ticketId: 2, // Assuming ticketId is 2 for second ticket
-//         message: "مشکل تا حدی برطرف شده است.",
-//         userId: 2 // Assuming userId is 2 for support
-//     }
-// ];
+const team724 = {
+    name: "724",
+    head: {
+        connect: {
+            id: 2
+        }
+    }
+}
 
 async function main() {
     console.time("seeding")
@@ -77,6 +54,10 @@ async function main() {
     for (const user of users) {
         await prisma.user.create({ data: user });
     }
+
+    await prisma.team.create({
+        data: team724
+    })
 
     console.timeEnd("seeding")
 }
