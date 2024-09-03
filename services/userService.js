@@ -107,7 +107,16 @@ const updateUser = async (req, res) => {
     }
 }
 
+const allUsers = async (skip, take) => {
+    try {
+        return await userModel.all(skip, take);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 export default {
     createUser,
-    updateUser
+    updateUser,
+    allUsers
 }

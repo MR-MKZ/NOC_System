@@ -79,8 +79,55 @@ const updateUser = async (req, res) => {
     })
 }
 
+/**
+ * create new user controller
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+const getAllUsers = async (req, res) => {
+    let users;
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.size) || 5;
+
+        const skip = (page - 1) * pageSize;
+        const take = pageSize;
+
+        const items = await userService.allUsers(skip, take)
+
+        users = items.users
+        const totalItems = items.total
+        const totalPages = Math.ceil(totalItems / pageSize);
+
+        if (users.length > 0 && page > totalPages) {
+            return res.status(404).json({
+                message: `page ${page} not found.`
+            })
+        }
+
+        for (let user of users) {
+            delete user["password"]
+            delete user["role_id"]
+        }
+
+        return res.status(200).json({
+            page: page,
+            pageSize: users.length,
+            totalItems: totalItems,
+            totalPages: totalPages,
+            users: users,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: "Internal server error"
+        })
+    }
+}
+
 export default {
     createUser,
     deleteUser,
-    updateUser
+    updateUser,
+    getAllUsers
 }

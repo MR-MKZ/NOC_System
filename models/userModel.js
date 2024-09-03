@@ -31,6 +31,51 @@ const findById = async (userId) => {
     });
 };
 
+const all = async (skip, take) => {
+    let users = await prisma.user.findMany({
+        where: {
+            NOT: [
+                { role_id: 1 }
+            ]
+        },
+        include: {
+            role: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            },
+            team: {
+                select: {
+                    head: {
+                        select: {
+                            id: true,
+                            username: true
+                        }
+                    },
+                    id: true,
+                    name: true
+                }
+            }
+        },
+        skip: skip,
+        take: take
+    })
+
+    let usersCount = await prisma.user.count({
+        where: {
+            NOT: [{
+                role_id: 1
+            }]
+        }
+    })
+
+    return users ? {
+        total: usersCount,
+        users: users
+    } : undefined
+}
+
 /**
  * 
  * @param {User} userData
@@ -75,6 +120,7 @@ const updateById = async ({
 export default {
     findByUsername,
     findById,
+    all,
     addUser,
     deleteById,
     updateById
