@@ -100,12 +100,14 @@ const updateTeam = async (id, data) => {
             throw new BadRequestException({
                 msg: "Old head can't set as new head"
             })
-
-        await userModel.removeTeam(oldHead.head_id, id)
+        
+        if (updatedData.head_id)
+            await userModel.removeTeam(oldHead.head_id, id)
         
         let team = await teamModel.updateById(id, updatedData)
         
-        await userModel.addTeam(updatedData.head_id, team.id)
+        if (updatedData.head_id)
+            await userModel.addTeam(updatedData.head_id, team.id)
         
         return await teamModel.findById(team.id)
     } catch (error) {

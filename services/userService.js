@@ -142,11 +142,11 @@ const updateUser = async (req, res) => {
     }
 }
 
-const allUsers = async (skip, take, role) => {
+const allUsers = async (role, team) => {
     try {
-        // if (role)
         await getAllUsersRoleSchema.validate(role)
-        return await userModel.all(skip, take, role);
+        
+        return await userModel.all(role, team);
     } catch (error) {
         if (error instanceof yup.ValidationError) {
             throw new BadRequestException({

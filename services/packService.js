@@ -51,7 +51,7 @@ export async function sendPackService(req, res) {
       })
     }
 
-    return req.query.page == "off" ? packs : paginate(packs, page, pageSize)
+    return req.query.page == "off" ? packs : paginate(packs, page, pageSize, "packs")
   } catch (error) {
     if (error instanceof PrismaClientValidationError) {
       console.log(error.message);

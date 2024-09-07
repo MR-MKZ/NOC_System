@@ -1,4 +1,4 @@
-const paginate = (data, page, limit) => {
+const paginate = (data, page, limit, objName) => {
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
 
@@ -6,13 +6,16 @@ const paginate = (data, page, limit) => {
 
     const totalPages = Math.ceil(data.length / limit);
 
-    return {
+    let obj = {
         page,
         pageSize: limit,
         totalItems: data.length,
-        totalPages,
-        packs: paginatedItems,
+        totalPages
     };
+
+    obj[objName] = paginatedItems
+
+    return obj
 }
 
 export default paginate;

@@ -2,6 +2,7 @@ import { PrismaClientKnownRequestError, PrismaClientValidationError } from "@pri
 import userModel from "../models/userModel.js";
 import userService from "../services/userService.js"
 import { ServerException } from "../utils/customException.js";
+import paginate from "../utils/paginator.js"
 
 
 /**
@@ -91,11 +92,12 @@ const getAllUsers = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.size) || 5;
         const role = req.query.role
+        const team = req.query.team
 
         const skip = (page - 1) * pageSize;
         const take = pageSize;
 
-        const items = await userService.allUsers(skip, take, role)
+        const items = await userService.allUsers(role, team)
 
         users = items.users
         const totalItems = items.total
@@ -112,14 +114,10 @@ const getAllUsers = async (req, res) => {
             delete user["role_id"]
         }
 
-        return res.status(200).json({
-            page: page,
-            pageSize: users.length,
-            totalItems: totalItems,
-            totalPages: totalPages,
-            users: users,
-        });
+        return res.status(200).json(req.query.page == "off" ? items.users : paginate(items.users, page, pageSize, "users"));
     } catch (error) {
+        console.log(error);
+
         return res.status(error.code).json({
             message: error.message,
             data: error.data
