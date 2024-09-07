@@ -70,7 +70,7 @@ const updateUser = async (req, res) => {
 
         let user = await userModel.findById(userId)
 
-        if (role && user.team.length > 0) 
+        if (role && user.team?.length > 0) 
             throw new BadRequestException({
                 msg: "You can't change role of user who added in a team"
             })
@@ -124,7 +124,15 @@ const updateUser = async (req, res) => {
         } else {
             console.log(error);
             throw new ServerException({
-                msg: "Internal server error, please try again later."
+                msg: "Internal server error, please try again later.",
+                data: {
+                    meta: {
+                        location: 'userService',
+                        operation: 'updateUser',
+                        time: new Date().toLocaleTimeString(),
+                        date: new Date().toLocaleDateString()
+                    }
+                }
             })
         }
     }
