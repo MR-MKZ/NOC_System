@@ -19,6 +19,10 @@ const updateUserSchema = yup.object().shape({
     role_id: yup.string().oneOf(["Team_724", "Head", "Member"], "User role should be one of this options: Team_724, Head, Member")
 })
 
+const getUserSchema = yup.number()
+
+const getAllUsersRoleSchema = yup.string().oneOf(["Admin", "Team_724", "Head", "Member"], "Role is not valid")
+
 /**
  * @param {import('express').Request} req 
  * @param {import('express').Response} res 
@@ -70,7 +74,7 @@ const updateUser = async (req, res) => {
 
         let user = await userModel.findById(userId)
 
-        if (role && user.team?.length > 0) 
+        if (role && user.team?.length > 0)
             throw new BadRequestException({
                 msg: "You can't change role of user who added in a team"
             })
@@ -88,10 +92,10 @@ const updateUser = async (req, res) => {
             updatedData.role_id = role
 
         await updateUserSchema.validate(updatedData)
-        
+
         if (password)
             updatedData.password = hashPassword(password)
-        
+
         if (role)
             updatedData.role_id = convertRole(role)
 
@@ -113,7 +117,7 @@ const updateUser = async (req, res) => {
             }
         } else if (error instanceof PrismaClientValidationError) {
             console.log(error.message);
-            
+
             throw new BadRequestException({
                 msg: error.message
             })
@@ -138,10 +142,18 @@ const updateUser = async (req, res) => {
     }
 }
 
-const allUsers = async (skip, take) => {
+const allUsers = async (skip, take, role) => {
     try {
-        return await userModel.all(skip, take);
+        // if (role)
+        await getAllUsersRoleSchema.validate(role)
+        return await userModel.all(skip, take, role);
     } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            throw new BadRequestException({
+                msg: "data validation error",
+                data: error.errors
+            })
+        }
         console.log(error);
         throw new ServerException({
             msg: 'Internal server error, please try again later.',
@@ -157,8 +169,36 @@ const allUsers = async (skip, take) => {
     }
 }
 
+const getUser = async (userId) => {
+    try {
+        await getUserSchema.validate(userId)
+
+        return await userModel.findById(userId)
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            throw new BadRequestException({
+                msg: "data validation error",
+                data: error.errors
+            })
+        }
+        console.log(error);
+        throw new ServerException({
+            msg: 'Internal server error, please try again later.',
+            data: {
+                meta: {
+                    location: 'userService',
+                    operation: 'getUser',
+                    time: new Date().toLocaleTimeString(),
+                    date: new Date().toLocaleDateString()
+                }
+            }
+        })
+    }
+}
+
 export default {
     createUser,
     updateUser,
-    allUsers
+    allUsers,
+    getUser
 }

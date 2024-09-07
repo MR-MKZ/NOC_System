@@ -39,44 +39,86 @@ const findById = async (userId) => {
     });
 };
 
-const all = async (skip, take) => {
-    let users = await prisma.user.findMany({
-        where: {
-            NOT: [
-                { role_id: 1 }
-            ]
-        },
-        include: {
-            role: {
-                select: {
-                    id: true,
-                    name: true
+const all = async (skip, take, role) => {
+    let users;
+    let usersCount;
+    if (role) {
+        users = await prisma.user.findMany({
+            where: {
+                role: {
+                    name: role
                 }
             },
-            team: {
-                select: {
-                    head: {
-                        select: {
-                            id: true,
-                            username: true
-                        }
-                    },
-                    id: true,
-                    name: true
+            include: {
+                role: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                team: {
+                    select: {
+                        head: {
+                            select: {
+                                id: true,
+                                username: true
+                            }
+                        },
+                        id: true,
+                        name: true
+                    }
+                }
+            },
+            skip: skip,
+            take: take
+        })
+    
+        usersCount = await prisma.user.count({
+            where: {
+                role: {
+                    name: role
                 }
             }
-        },
-        skip: skip,
-        take: take
-    })
-
-    let usersCount = await prisma.user.count({
-        where: {
-            NOT: [{
-                role_id: 1
-            }]
-        }
-    })
+        })
+    } else {
+        users = await prisma.user.findMany({
+            where: {
+                NOT: [
+                    { role_id: 1 }
+                ]
+            },
+            include: {
+                role: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                team: {
+                    select: {
+                        head: {
+                            select: {
+                                id: true,
+                                username: true
+                            }
+                        },
+                        id: true,
+                        name: true
+                    }
+                }
+            },
+            skip: skip,
+            take: take
+        })
+    
+        usersCount = await prisma.user.count({
+            where: {
+                NOT: [{
+                    role_id: 1
+                }]
+            }
+        })
+    }
 
     return users ? {
         total: usersCount,

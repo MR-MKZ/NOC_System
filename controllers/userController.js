@@ -90,11 +90,12 @@ const getAllUsers = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.size) || 5;
+        const role = req.query.role
 
         const skip = (page - 1) * pageSize;
         const take = pageSize;
 
-        const items = await userService.allUsers(skip, take)
+        const items = await userService.allUsers(skip, take, role)
 
         users = items.users
         const totalItems = items.total
@@ -119,7 +120,6 @@ const getAllUsers = async (req, res) => {
             users: users,
         });
     } catch (error) {
-        console.log(error);
         return res.status(error.code).json({
             message: error.message,
             data: error.data
@@ -127,9 +127,31 @@ const getAllUsers = async (req, res) => {
     }
 }
 
+/**
+ * create new user controller
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+const getUser = async (req, res) => {
+    let user;
+    try {
+        const userId = parseInt(req.params.id)
+
+        user = await userService.getUser(userId)
+    } catch (error) {
+        return res.status(error.code).json({
+            message: error.message,
+            data: error.data
+        })
+    }
+
+    res.status(200).json(user)
+}
+
 export default {
     createUser,
     deleteUser,
     updateUser,
-    getAllUsers
+    getAllUsers,
+    getUser
 }
