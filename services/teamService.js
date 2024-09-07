@@ -275,7 +275,7 @@ const removeUser = async (teamId, userId) => {
             data: {
                 meta: {
                     location: 'teamService',
-                    operation: 'addUser',
+                    operation: 'removeUser',
                     time: new Date().toLocaleTimeString(),
                     date: new Date().toLocaleDateString()
                 }
