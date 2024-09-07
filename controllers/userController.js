@@ -148,10 +148,40 @@ const getUser = async (req, res) => {
     res.status(200).json(user)
 }
 
+/**
+ * create new user controller
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+const getCurrentUser = async (req, res) => {
+    let user;
+    try {
+        let userId = req.user.userId
+        user = await userModel.findById(userId)
+        delete user["password"]
+        delete user["role_id"]
+    } catch (error) {
+        console.log(error);
+        throw new ServerException({
+            msg: 'Internal server error, please try again later.',
+            data: {
+                meta: {
+                    location: 'userService',
+                    operation: 'getUser',
+                    time: new Date().toLocaleTimeString(),
+                    date: new Date().toLocaleDateString()
+                }
+            }
+        })
+    }
+    res.status(200).json(user)
+}
+
 export default {
     createUser,
     deleteUser,
     updateUser,
     getAllUsers,
-    getUser
+    getUser,
+    getCurrentUser
 }

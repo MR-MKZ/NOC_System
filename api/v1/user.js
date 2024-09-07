@@ -8,6 +8,7 @@ router.post('/', userIsAdmin, userController.createUser);
 router.get('/', userIsAdmin, userController.getAllUsers)
 router.delete('/:id', userIsAdmin, userController.deleteUser)
 router.put('/:id', userIsAdmin, userController.updateUser)
+router.get('/me', userController.getCurrentUser)
 router.get('/:id', userIsAdmin, userController.getUser)
 
 export {
