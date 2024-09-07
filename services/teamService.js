@@ -78,12 +78,12 @@ const updateTeam = async (id, data) => {
                     msg: "User doesn't exist"
                 })
 
-            if (head.role_id != 3)
+            if (![2, 3].includes(head.role_id))
                 throw new BadRequestException({
                     msg: "User must have Head role"
                 })
 
-            if (head.team.length > 0)
+            if (head.team?.length > 0)
                 throw new BadRequestException({
                     msg: "User already added to a team"
                 })
@@ -94,7 +94,9 @@ const updateTeam = async (id, data) => {
         if (validatedData.name)
             updatedData.name = validatedData.name
 
-        return await teamModel.updateById(id, updatedData)
+        let team = await teamModel.updateById(id, updatedData)
+        await userModel.addTeam(updatedData.head_id, team.id)
+        return await teamModel.findById(team.id)
     } catch (error) {
         if (error instanceof yup.ValidationError) {
             throw new BadRequestException({
@@ -227,7 +229,7 @@ const removeUser = async (teamId, userId) => {
             throw new NotFoundException({
                 msg: "Team not found"
             })
-            
+
         if (!user)
             throw new NotFoundException({
                 msg: "User not found"
@@ -237,7 +239,7 @@ const removeUser = async (teamId, userId) => {
             throw new NotFoundException({
                 msg: "User is not in this team"
             })
-        
+
         if (user.id == team.head_id)
             throw new BadRequestException({
                 msg: "You can't remove team head"
@@ -255,7 +257,7 @@ const removeUser = async (teamId, userId) => {
         } else if (error instanceof PrismaClientKnownRequestError) {
             if (error.code === "P2025") {
                 console.log(error.meta);
-                
+
                 throw new NotFoundException({
                     msg: `Team not found`
                 })
