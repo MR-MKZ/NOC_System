@@ -125,11 +125,23 @@ const updateById = async ({
     })
 }
 
+const addTeam = async (id, team) => {
+    return await prisma.user.update({
+        where: {
+            id: id
+        },
+        data: {
+            team_id: team
+        }
+    })
+}
+
 export default {
     findByUsername,
     findById,
     all,
     addUser,
     deleteById,
-    updateById
+    updateById,
+    addTeam
 }

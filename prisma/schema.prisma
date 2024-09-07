@@ -8,14 +8,17 @@ generator client {
 }
 
 model User {
-    id         Int         @id @default(autoincrement())
-    username   String      @unique
-    password   String
-    email      String      @unique
-    role_id    Int
-    role       Role        @relation(fields: [role_id], references: [id])
-    team       Team[]
+    id       Int    @id @default(autoincrement())
+    username String @unique
+    password String
+    email    String @unique
+    role_id  Int
+    role     Role   @relation(fields: [role_id], references: [id])
+    team_id  Int?
+    team     Team?  @relation("TeamMembers", fields: [team_id], references: [id])
+    head_of  Team[] @relation("TeamHead")
     alert_pack AlertPack[]
+    Team Team[]
 }
 
 model Role {
@@ -27,9 +30,11 @@ model Role {
 model Team {
     id         Int         @id @default(autoincrement())
     name       String      @unique
-    head_id    Int
-    head       User        @relation(fields: [head_id], references: [id])
+    head_id    Int         @unique
+    head       User        @relation("TeamHead", fields: [head_id], references: [id])
+    members    User[]      @relation("TeamMembers")
     alert_pack AlertPack[]
+    User       User[]
 }
 
 model Notification {

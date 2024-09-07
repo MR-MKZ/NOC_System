@@ -88,12 +88,75 @@ const deleteTeam = async (req, res) => {
  * @param {import('express').Response} res 
  */
 const addTeamMember = async (req, res) => {
-    
+    let team;
+    try {
+        const teamId = parseInt(req.params.id)
+        const userId = parseInt(req.body.userId)
+
+        team = await teamService.addUser(teamId, userId)
+    } catch (error) {
+        return res.status(error.code).json({
+            message: error.message,
+            data: error.data
+        })
+    }
+
+    return res.status(200).json({
+        message: "User added to team successfully",
+        team: team
+    })
+}
+
+/**
+ * fetch, paginate and return packs for user
+ * @param {import('express').Request} req 
+ * @param {import('express').Response} res 
+ */
+const allTeams = async (req, res) => {
+    let teams;
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.size) || 5;
+
+        const skip = (page - 1) * pageSize;
+        const take = pageSize;
+
+        const items = await teamService.allTeams(skip, take)
+
+        teams = items.teams
+        const totalItems = items.total
+        const totalPages = Math.ceil(totalItems / pageSize);
+
+        if (teams.length > 0 && page > totalPages) {
+            return res.status(404).json({
+                message: `page ${page} not found.`
+            })
+        }
+
+        for (let team of teams) {
+            delete team["head_id"]
+        }
+
+        return res.status(200).json({
+            page: page,
+            pageSize: teams.length,
+            totalItems: totalItems,
+            totalPages: totalPages,
+            teams: teams,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(error.code).json({
+            message: error.message,
+            data: error.data
+        })
+    }
 }
 
 export default {
     createTeam,
     updateTeam,
     deleteTeam,
-    addTeamMember
+    addTeamMember,
+    allTeams
 }

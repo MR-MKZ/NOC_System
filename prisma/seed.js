@@ -37,11 +37,7 @@ const users = [
 
 const team724 = {
     name: "724",
-    head: {
-        connect: {
-            id: 2
-        }
-    }
+    head_id: 2
 }
 
 async function main() {

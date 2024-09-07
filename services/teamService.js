@@ -11,6 +11,11 @@ const updateTeamValidation = yup.object().shape({
 
 const deleteTeamValidation = yup.number()
 
+const addUserValidation = yup.object().shape({
+    userId: yup.number().required("User id is required"),
+    teamId: yup.number().required("Team id is required")
+})
+
 const createTeam = async (name, head_id) => {
     try {
         if (isNaN(Number(head_id)))
@@ -25,7 +30,7 @@ const createTeam = async (name, head_id) => {
                 msg: "User doesn't exist"
             })
 
-        if (head.role_id != 3)
+        if (![2, 3].includes(head.role_id))
             throw new BadRequestException({
                 msg: "User must have Head role"
             })
@@ -94,6 +99,12 @@ const updateTeam = async (id, data) => {
                 msg: "data validtion error",
                 data: error.errors
             })
+        } else if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === "P2025") {
+                throw new NotFoundException({
+                    msg: "Team not found"
+                })
+            }
         } else if (error instanceof NotFoundException) {
             throw new NotFoundException({
                 msg: error.message
@@ -151,8 +162,78 @@ const deleteTeam = async (id) => {
     }
 }
 
+const addUser = async (teamId, userId) => {
+    try {
+        await addUserValidation.validate({
+            userId,
+            teamId
+        })
+
+        let user = await userModel.findById(userId)
+
+        if (!user)
+            throw new NotFoundException({
+                msg: "User not found"
+            })
+
+        await userModel.addTeam(userId, teamId)
+
+        return await teamModel.findById(teamId)
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            throw new BadRequestException({
+                msg: "data validation error",
+                data: error.errors
+            })
+        } else if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === "P2025") {
+                throw new NotFoundException({
+                    msg: "Team not found"
+                })
+            }
+        } else if (error instanceof NotFoundException) {
+            throw new NotFoundException({
+                msg: error.message
+            })
+        }
+        console.log(error);
+        throw new ServerException({
+            msg: "Internal server error. please try again later",
+            data: {
+                meta: {
+                    location: 'teamService',
+                    operation: 'addUser',
+                    time: new Date().toLocaleTimeString(),
+                    date: new Date().toLocaleDateString()
+                }
+            }
+        })
+    }
+}
+
+const allTeams = async (skip, take) => {
+    try {
+        return await teamModel.all(skip, take);
+    } catch (error) {
+        console.log(error);
+        throw new ServerException({
+            msg: 'Internal server error, please try again later.',
+            data: {
+                meta: {
+                    location: 'teamService',
+                    operation: 'allTeams',
+                    time: new Date().toLocaleTimeString(),
+                    date: new Date().toLocaleDateString()
+                }
+            }
+        })
+    }
+}
+
 export default {
     createTeam,
     updateTeam,
-    deleteTeam
+    deleteTeam,
+    addUser,
+    allTeams
 }
