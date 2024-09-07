@@ -112,6 +112,29 @@ const addTeamMember = async (req, res) => {
  * @param {import('express').Request} req 
  * @param {import('express').Response} res 
  */
+const removeTeamMember = async (req, res) => {
+    try {
+        const teamId = parseInt(req.params.id)
+        const userId = parseInt(req.body.userId)
+
+        await teamService.removeUser(teamId, userId)
+    } catch (error) {
+        return res.status(error.code).json({
+            message: error.message,
+            data: error.data
+        })
+    }
+
+    return res.status(200).json({
+        message: "User removed from team successfully",
+    })
+}
+
+/**
+ * fetch, paginate and return packs for user
+ * @param {import('express').Request} req 
+ * @param {import('express').Response} res 
+ */
 const allTeams = async (req, res) => {
     let teams;
     try {
@@ -158,5 +181,6 @@ export default {
     updateTeam,
     deleteTeam,
     addTeamMember,
+    removeTeamMember,
     allTeams
 }

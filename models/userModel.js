@@ -136,6 +136,20 @@ const addTeam = async (id, team) => {
     })
 }
 
+const removeTeam = async (id, teamId) => {
+    return await prisma.user.update({
+        where: {
+            id: id,
+            team_id: teamId
+        },
+        data: {
+            team: {
+                disconnect: true
+            }
+        }
+    })
+}
+
 export default {
     findByUsername,
     findById,
@@ -143,5 +157,6 @@ export default {
     addUser,
     deleteById,
     updateById,
-    addTeam
+    addTeam,
+    removeTeam
 }
