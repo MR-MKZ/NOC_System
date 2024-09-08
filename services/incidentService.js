@@ -15,13 +15,18 @@ const assignIncidentSchema = yup.object().shape({
     headId: yup.number().required("Pack id is required"),
     masterMember: yup.number().required("Master member id is required"),
     members: yup.array().of(
-        yup.number().positive().required()
+        yup.number()
+            .typeError("Each member must be a number")
+            .positive("Each member must be a positive number")
+            .integer("Each member must be an integer")
+            .required("Member id is required")
+            .strict()
     )
 })
 
 
 const createIncident = async (packId, teamId, notifications) => {
-    try {     
+    try {
         await createIncidentSchema.validate({ packId, teamId, notifications })
 
         return await incidentModel.create(packId, teamId, notifications)
@@ -52,22 +57,24 @@ const createIncident = async (packId, teamId, notifications) => {
                 }
             }
         })
-    }
+    } 
 }
 
 const assignIncident = async (packId, headId, masterMember, members) => {
     try {
-        await assignIncidentSchema.validate({ packId, headId, masterMember, members })
+        let validatedData = await assignIncidentSchema.validate({ packId, headId, masterMember, members })
 
-        return await incidentModel.assignToMember(packId, headId, masterMember, members)
+        return await incidentModel.assignToMember(validatedData.packId, validatedData.headId, validatedData.masterMember, validatedData.members)
     } catch (error) {
         if (error instanceof BadRequestException) {
             throw new BadRequestException({
-                msg: error.message
+                msg: error.message,
+                data: error.data
             })
         } else if (error instanceof NotFoundException) {
             throw new NotFoundException({
-                msg: error.message
+                msg: error.message,
+                data: error.data
             })
         } else if (error instanceof yup.ValidationError) {
             throw new BadRequestException({

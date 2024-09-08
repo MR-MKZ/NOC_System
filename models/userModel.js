@@ -128,6 +128,9 @@ const all = async (role, team) => {
                     fingerprint: true
                 }
             }
+        },
+        orderBy: {
+            id: "asc"
         }
     }
 

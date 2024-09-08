@@ -97,13 +97,33 @@ const assignToMember = async (packId, headId, masterMember, members) => {
         })
     }
 
+    if (members.length > 0) {
+        let users = await userModel.findUsers(members)
+        let allowedUsers = !users.some(user => user.team_id != pack.assigned_team_id); 
+        
+        if (users.length < members.length) {
+            let missingIds = members.filter(id => !users.some(user => user.id === id));
+            throw new BadRequestException({
+                msg: "some of members are not exist",
+                data: missingIds
+            })
+        }
+
+        if (!allowedUsers) {
+            throw new BadRequestException({
+                msg: "some of members are not in assigned pack team"
+            })
+        }
+    }
+
     await prisma.alertPack.update({
         where: {
             id: packId
         },
         data: {
             master_memberId: masterMember,
-            status: "InProgress"
+            status: "InProgress",
+            in_progress_time: new Date()
         }
     })
 
@@ -117,37 +137,6 @@ const assignToMember = async (packId, headId, masterMember, members) => {
     })
 
     if (members.length > 0) {
-        let allowedUsers = !(await userModel.findUsers(members)).some(user => user.team_id != pack.assigned_team_id);        
-
-        if (!allowedUsers) {
-            await prisma.alertPack.update({
-                where: {
-                    id: packId
-                },
-                data: {
-                    master_member: {
-                        disconnect: true
-                    },
-                    status: "Pending"
-                }
-            })
-
-            await prisma.user.update({
-                where: {
-                    id: masterMember
-                },
-                data: {
-                    pack: {
-                        disconnect: true
-                    }
-                }
-            })
-
-            throw new BadRequestException({
-                msg: "some of members are not in assigned pack team"
-            })
-        }
-
         await prisma.user.updateMany({
             where: {
                 id: {

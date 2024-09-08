@@ -1,6 +1,7 @@
 import { prismaClientInstance as prisma } from "../config/database.js";
 
 import { Status, NotifTypes } from '@prisma/client';
+import logUpdate from "log-update";
 
 async function updateAlertPackAndNotifications() {
     const alertPacks = await prisma.alertPack.findMany({
@@ -45,7 +46,11 @@ async function getRandomTeamId() {
     return randomTeam.id;
 }
 
-for (let x = 0; x < 300; x++) {
+let total = 1200
+
+for (let x = 0; x < total; x++) {
     await updateAlertPackAndNotifications()
-    console.log(`random incident created. No${x}`);
+    logUpdate(`Progress: ${((x * 100) / total).toFixed(1)}%`)
 }
+
+console.log(`Process completed at ${new Date().toLocaleTimeString()}`);

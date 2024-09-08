@@ -32,6 +32,9 @@ const all = async (skip, take) => {
                     username: true
                 }
             }
+        },
+        orderBy: {
+            id: "asc"
         }
     }
 
