@@ -12,8 +12,30 @@ import hashPassword from "../utils/passwordHash.js";
 
 const findByUsername = async (username) => {
     return await prisma.user.findUnique({
-        where: { username }, include: {
-            role: true
+        where: { username }, 
+        include: {
+            role: {
+                select: {
+                    name: true
+                }
+            },
+            team: {
+                select: {
+                    id: true,
+                    name: true,
+                    head: true,
+                    alert_pack: true
+                }
+            },
+            alert_pack: {
+                select: {
+                    id: true,
+                    type: true,
+                    status: true,
+                    priority: true,
+                    fingerprint: true
+                }
+            }
         }
     });
 };
@@ -34,10 +56,44 @@ const findById = async (userId) => {
                     head: true,
                     alert_pack: true
                 }
+            },
+            alert_pack: {
+                select: {
+                    id: true,
+                    type: true,
+                    status: true,
+                    priority: true,
+                    fingerprint: true
+                }
             }
         }
     });
 };
+
+const findUsers = async (users) => {
+    return await prisma.user.findMany({
+        where: {
+            id: {
+                in: users
+            }
+        },
+        // include: {
+        //     alert_pack: true,
+        //     role: true,
+        //     team: true
+        // },
+        select: {
+            id: true,
+            username: true,
+            role_id: true,
+            role: true,
+            team_id: true,
+            team: true,
+            alert_pack: true,
+            email: true,
+        }
+    })
+}
 
 const all = async (role, team) => {
     let users;
@@ -61,6 +117,15 @@ const all = async (role, team) => {
                     },
                     id: true,
                     name: true
+                }
+            },
+            alert_pack: {
+                select: {
+                    id: true,
+                    type: true,
+                    status: true,
+                    priority: true,
+                    fingerprint: true
                 }
             }
         }
@@ -170,5 +235,6 @@ export default {
     deleteById,
     updateById,
     addTeam,
-    removeTeam
+    removeTeam,
+    findUsers
 }

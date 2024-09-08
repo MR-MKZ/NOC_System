@@ -30,7 +30,23 @@ const createIncident = async (req, res) => {
  * @param {import("express").Response} res 
  */
 const assignIncident = async (req, res) => {
+    try {
+        const packId = req.body.packId
+        const headId = parseInt(req.user.userId)
+        const masterMember = req.body.masterMember
+        const members = req.body.members
 
+        await incidentService.assignIncident(packId, headId, masterMember, members)
+    } catch (error) {
+        return res.status(error.code).json({
+            message: error.message,
+            data: error.data
+        })
+    }
+
+    return res.status(200).json({
+        message: "Incident assigned to member successfully"
+    })
 }
 
 /**
