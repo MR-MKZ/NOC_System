@@ -107,8 +107,17 @@ const assignToMember = async (packId, headId, masterMember, members) => {
         }
     })
 
+    await prisma.user.update({
+        where: {
+            id: masterMember
+        },
+        data: {
+            pack_id: packId
+        }
+    })
+
     if (members.length > 0) {
-        let allowedUsers = (await userModel.findUsers(members)).some(user => user.team_id != pack.assigned_team_id);
+        let allowedUsers = !(await userModel.findUsers(members)).some(user => user.team_id != pack.assigned_team_id);        
 
         if (!allowedUsers) {
             await prisma.alertPack.update({
@@ -120,6 +129,17 @@ const assignToMember = async (packId, headId, masterMember, members) => {
                         disconnect: true
                     },
                     status: "Pending"
+                }
+            })
+
+            await prisma.user.update({
+                where: {
+                    id: masterMember
+                },
+                data: {
+                    pack: {
+                        disconnect: true
+                    }
                 }
             })
 
@@ -135,11 +155,7 @@ const assignToMember = async (packId, headId, masterMember, members) => {
                 }
             },
             data: {
-                alert_pack: {
-                    connect: {
-                        id: packId
-                    }
-                }
+                pack_id: packId
             }
         })
     }
