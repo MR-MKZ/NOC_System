@@ -17,7 +17,7 @@ const findById = async (id) => {
     })
 }
 
-const create = async (packId, teamId) => {
+const create = async (packId, teamId, notifIds) => {
     let team = await teamModel.findById(teamId)
     if (!team) {
         throw new NotFoundException({
@@ -37,6 +37,17 @@ const create = async (packId, teamId) => {
             msg: "pack is already incident"
         })
     }
+
+    await prisma.notification.updateMany({
+        where: {
+            id: {
+                in: notifIds
+            }
+        },
+        data: {
+            type: "Incident"
+        }
+    })
 
     return await prisma.alertPack.update({
         where: {

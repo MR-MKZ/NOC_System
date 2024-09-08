@@ -112,7 +112,7 @@ export async function sendIncidentPackService(req, res) {
     })
   }
 
-  return res.status(200).json(req.query.page == "off" ? packs : paginate(packs, page, pageSize));
+  return res.status(200).json(req.query.page == "off" ? packs : paginate(packs, page, pageSize, "incidents"));
 }
 
 /**

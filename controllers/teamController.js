@@ -144,29 +144,35 @@ const allTeams = async (req, res) => {
         const skip = (page - 1) * pageSize;
         const take = pageSize;
 
-        const items = await teamService.allTeams(skip, take)
+        const items = await teamService.allTeams(req.query.page == "off" ? "off" : skip, take)
 
-        teams = items.teams
-        const totalItems = items.total
-        const totalPages = Math.ceil(totalItems / pageSize);
+        if (req.query.page != "off") {
+            teams = items.teams
+            const totalItems = items.total
+            const totalPages = Math.ceil(totalItems / pageSize);
 
-        if (teams.length > 0 && page > totalPages) {
-            return res.status(404).json({
-                message: `page ${page} not found.`
+            if (teams.length > 0 && page > totalPages) {
+                return res.status(404).json({
+                    message: `page ${page} not found.`
+                })
+            }
+
+            for (let team of teams) {
+                delete team["head_id"]
+            }
+
+            return res.status(200).json({
+                page: page,
+                pageSize: teams.length,
+                totalItems: totalItems,
+                totalPages: totalPages,
+                teams: teams,
+            });
+        } else {
+            return res.status(200).json({
+                teams: items
             })
         }
-
-        for (let team of teams) {
-            delete team["head_id"]
-        }
-
-        return res.status(200).json({
-            page: page,
-            pageSize: teams.length,
-            totalItems: totalItems,
-            totalPages: totalPages,
-            teams: teams,
-        });
     } catch (error) {
         console.log(error);
         return res.status(error.code).json({

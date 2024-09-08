@@ -131,7 +131,7 @@ export const getAllIncidents = async () => {
         notIn: ["Done", "Resolved"]
       },
       type: "Incident"
-    }
+    },
   })
 
   packs = await prisma.alertPack.findMany({
@@ -157,6 +157,24 @@ export const getAllIncidents = async () => {
         },
         take: 1,
       },
+      assigned_team: {
+        select: {
+          id: true,
+          name: true,
+          head: {
+            select: {
+              id: true,
+              username: true
+            }
+          },
+        },
+      },
+      master_member: {
+        select: {
+          id: true,
+          username: true
+        }
+      }
     }
   })
 

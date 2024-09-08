@@ -18,7 +18,7 @@ const findById = async (id) => {
 }
 
 const all = async (skip, take) => {
-    let teams = await prisma.team.findMany({
+    let query = {
         include: {
             head: {
                 select: {
@@ -32,17 +32,26 @@ const all = async (skip, take) => {
                     username: true
                 }
             }
-        },
-        skip: skip,
-        take: take
-    })
+        }
+    }
+
+    if (skip != "off") {
+        query["skip"] = skip
+        query["take"] = take
+    }
+
+    let teams = await prisma.team.findMany(query)
 
     let teamCount = await prisma.team.count()
 
-    return teams ? {
-        total: teamCount,
-        teams: teams
-    } : undefined
+    if (skip != "off") {
+        return teams ? {
+            total: teamCount,
+            teams: teams
+        } : undefined
+    } else {
+        return teams
+    }
 }
 
 const create = async ({

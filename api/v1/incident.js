@@ -1,10 +1,12 @@
 import { Router } from "express";
 import incidentController from "../../controllers/incidentController.js";
+import userIs724 from "../../middlewares/userIs724.js"
+import userIsHead from "../../middlewares/userIsHead.js"
 
 const router = Router()
 
-router.post('/', incidentController.createIncident);
-router.post('/assign', incidentController.assignIncident);
+router.post('/', userIs724, incidentController.createIncident);
+router.post('/assign', userIsHead, incidentController.assignIncident);
 router.post('/report', incidentController.reportIncident);
 
 export {
