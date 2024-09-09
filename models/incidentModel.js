@@ -207,6 +207,15 @@ const resolveById = async (id, userId) => {
 
     const elapsed_time = calculateProgressTime(incidentPack.in_progress_time, new Date())
 
+    await prisma.user.updateMany({
+        where: {
+            pack_id: id
+        },
+        data: {
+            pack_id: null
+        }
+    })
+
     return await prisma.alertPack.update({
         where: {
             id: id,

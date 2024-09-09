@@ -91,6 +91,9 @@ export async function sendIncidentPackService(req, res) {
   const headId = parseInt(req.user.userId)
   const role = req.user?.role?.name
 
+  console.log(req.user, headId, role);
+  
+
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 

@@ -1,6 +1,8 @@
 import { prismaClientInstance as prisma } from "../config/database.js";
 import { BadRequestException } from "../utils/customException.js";
 
+import userModel from "./userModel.js"
+
 /**
  * 
  * @typedef {'Alert' | 'Resolved' | 'Pending' | 'InProgress' | 'Done' | 'All'} PackStatus
@@ -127,6 +129,11 @@ export const getAllIncidents = async (headId, role) => {
   let packs;
   let total;
 
+  let user = await userModel.findById(headId)
+
+  // console.log(user);
+
+
   let query = {
     status: {
       notIn: ["Done", "Resolved"]
@@ -140,48 +147,63 @@ export const getAllIncidents = async (headId, role) => {
     }
   }
 
-  total = await prisma.alertPack.count({
-    where: query
-  })
+  if (user.alert_pack.length > 0) {
+    query["id"] = user.pack_id
+  }
 
-  packs = await prisma.alertPack.findMany({
-    where: query,
-    orderBy: {
-      id: "desc"
-    },
-    include: {
-      notifications: {
-        orderBy: {
-          receive_time: 'desc',
-        },
-        select: {
-          service: true,
-          text: true,
-          alert_create_time: true,
-          receive_time: true
-        },
-        take: 1,
+  if (["Head", "Team_724"].includes(user.role) && user.team.length > 0 || user.alert_pack.length > 0) {
+    total = await prisma.alertPack.count({
+      where: query
+    })
+
+    packs = await prisma.alertPack.findMany({
+      where: query,
+      orderBy: {
+        id: "desc"
       },
-      assigned_team: {
-        select: {
-          id: true,
-          name: true,
-          head: {
-            select: {
-              id: true,
-              username: true
-            }
+      include: {
+        notifications: {
+          orderBy: {
+            receive_time: 'desc',
+          },
+          select: {
+            service: true,
+            text: true,
+            alert_create_time: true,
+            receive_time: true
+          },
+          take: 1,
+        },
+        assigned_team: {
+          select: {
+            id: true,
+            name: true,
+            head: {
+              select: {
+                id: true,
+                username: true
+              }
+            },
           },
         },
-      },
-      master_member: {
-        select: {
-          id: true,
-          username: true
+        master_member: {
+          select: {
+            id: true,
+            username: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            username: true
+          }
         }
       }
-    }
-  })
+    })
+  } else {
+    total - 0
+    packs = []
+  }
 
   return packs ? {
     packs: packs,

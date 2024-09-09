@@ -96,7 +96,7 @@ const updateTeam = async (id, data) => {
 
         let oldHead = await teamModel.findById(id)
 
-        if (oldHead.head_id, updatedData.head_id)
+        if (oldHead.head_id == updatedData.head_id)
             throw new BadRequestException({
                 msg: "Old head can't set as new head"
             })
