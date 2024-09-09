@@ -28,7 +28,9 @@ export const getPack = async ({ id, fingerprint }) => {
     pack = await prisma.alertPack.findFirst({
       where: {
         fingerprint: fingerprint,
-        status: "Alert",
+        status: {
+          in: ["Alert", "Pending", "InProgress"]
+        }
       },
     });
   } else {
@@ -121,26 +123,29 @@ export const getAllPacks = async (packStatus, startId) => {
   } : undefined
 };
 
-export const getAllIncidents = async () => {
+export const getAllIncidents = async (headId, role) => {
   let packs;
   let total;
 
-  total = await prisma.alertPack.count({
-    where: {
-      status: {
-        notIn: ["Done", "Resolved"]
-      },
-      type: "Incident"
+  let query = {
+    status: {
+      notIn: ["Done", "Resolved"]
     },
+    type: "Incident"
+  }
+
+  if (!isNaN(headId) && role == "Head") {
+    query["assigned_team"] = {
+      head_id: headId
+    }
+  }
+
+  total = await prisma.alertPack.count({
+    where: query
   })
 
   packs = await prisma.alertPack.findMany({
-    where: {
-      status: {
-        notIn: ["Done", "Resolved"]
-      },
-      type: "Incident"
-    },
+    where: query,
     orderBy: {
       id: "desc"
     },

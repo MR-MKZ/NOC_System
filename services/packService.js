@@ -88,12 +88,14 @@ export async function sendIncidentPackService(req, res) {
   const page = parseInt(req.query.page) || 1;
   const pageSize = parseInt(req.query.size) || 5;
   const status = req.query.status || "Alert"
+  const headId = parseInt(req.user.userId)
+  const role = req.user?.role?.name
 
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 
   // Fetch items with pagination
-  const items = await getAllIncidents(status, skip, take)
+  const items = await getAllIncidents(headId, role)
 
   const packs = items.packs
 

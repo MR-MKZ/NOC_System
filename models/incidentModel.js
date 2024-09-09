@@ -1,8 +1,9 @@
 import { prismaClientInstance as prisma } from "../config/database.js";
-import { BadRequestException, NotFoundException } from "../utils/customException.js";
+import { BadRequestException, NotFoundException, UnauthorizedException } from "../utils/customException.js";
 import teamModel from "./teamModel.js";
 import { getPack } from "./packModel.js"
 import userModel from "./userModel.js";
+import calculateProgressTime from "../utils/calculateProgressTime.js"
 
 const findById = async (id) => {
     return await prisma.alertPack.findUnique({
@@ -74,7 +75,7 @@ const assignToMember = async (packId, headId, masterMember, members) => {
     }
 
     if (pack.assigned_team_id != head.team_id) {
-        throw new BadRequestException({
+        throw new UnauthorizedException({
             msg: "You are not head of this team"
         })
     }
@@ -99,8 +100,8 @@ const assignToMember = async (packId, headId, masterMember, members) => {
 
     if (members.length > 0) {
         let users = await userModel.findUsers(members)
-        let allowedUsers = !users.some(user => user.team_id != pack.assigned_team_id); 
-        
+        let allowedUsers = !users.some(user => user.team_id != pack.assigned_team_id);
+
         if (users.length < members.length) {
             let missingIds = members.filter(id => !users.some(user => user.id === id));
             throw new BadRequestException({
@@ -189,10 +190,42 @@ const deleteById = async (id) => {
     })
 }
 
+const resolveById = async (id, userId) => {
+    let incidentPack = await findById(id)
+
+    if (!incidentPack) {
+        throw new NotFoundException({
+            msg: "Pack not found"
+        })
+    }
+
+    if (incidentPack.master_memberId != userId) {
+        throw new UnauthorizedException({
+            msg: "You are not master member of this incident!"
+        })
+    }
+
+    const elapsed_time = calculateProgressTime(incidentPack.in_progress_time, new Date())
+
+    return await prisma.alertPack.update({
+        where: {
+            id: id,
+            status: "InProgress"
+        },
+        data: {
+            status: "Done",
+            finish_time: new Date(),
+            elapsed_time: elapsed_time,
+            end_at: new Date()
+        }
+    })
+}
+
 export default {
     findById,
     updateById,
     deleteById,
     create,
-    assignToMember
+    assignToMember,
+    resolveById
 }

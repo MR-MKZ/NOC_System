@@ -54,12 +54,28 @@ const assignIncident = async (req, res) => {
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-const reportIncident = async (req, res) => {
+const resolveIncident = async (req, res) => {
+    let data;
+    try {
+        const packId = req.params.id
+        const userId = parseInt(req.user.userId)
 
+        data = await incidentService.resolveIncident(packId, userId)
+    } catch (error) {
+        return res.status(error.code).json({
+            message: error.message,
+            data: error.data
+        })
+    }
+
+    return res.status(200).json({
+        message: "Incident resolved successfully",
+        data: data
+    })
 }
 
 export default {
     createIncident,
     assignIncident,
-    reportIncident
+    resolveIncident
 }

@@ -141,8 +141,12 @@ const all = async (role, team) => {
     }
 
     if (team) {
-        query["where"]["team"] = {
-            name: team
+        if (team == "null") {
+            query["where"]["team_id"] = null
+        } else {
+            query["where"]["team"] = {
+                name: team
+            }
         }
     }
 
