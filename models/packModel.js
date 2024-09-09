@@ -131,9 +131,6 @@ export const getAllIncidents = async (headId, role) => {
 
   let user = await userModel.findById(headId)
 
-  // console.log(user);
-
-
   let query = {
     status: {
       notIn: ["Done", "Resolved"]
@@ -147,11 +144,11 @@ export const getAllIncidents = async (headId, role) => {
     }
   }
 
-  if (user.alert_pack.length > 0) {
+  if (user.pack_id) {
     query["id"] = user.pack_id
   }
 
-  if (["Head", "Team_724"].includes(user.role) && user.team.length > 0 || user.alert_pack.length > 0) {
+  if (role == "Team_724" || role == "Head" && user.team_id || user.pack_id) {
     total = await prisma.alertPack.count({
       where: query
     })

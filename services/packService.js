@@ -89,10 +89,7 @@ export async function sendIncidentPackService(req, res) {
   const pageSize = parseInt(req.query.size) || 5;
   const status = req.query.status || "Alert"
   const headId = parseInt(req.user.userId)
-  const role = req.user?.role?.name
-
-  console.log(req.user, headId, role);
-  
+  const role = req.user?.role?.name  
 
   const skip = (page - 1) * pageSize;
   const take = pageSize;
