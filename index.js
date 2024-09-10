@@ -37,10 +37,16 @@ const accessLogStream = fs.createWriteStream(
   { flags: "a" }
 );
 
+morgan.token('body', (req) => {
+  return JSON.stringify(req.body) || '-'; // Fallback to '-' if body is empty
+});
+
+const morganFormat = ':remote-addr - - [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" :body';
+
 app.use(cors());
 app.use(express.json());
 app.use(morgan("combined"));
-app.use(morgan("combined", { 
+app.use(morgan(morganFormat, { 
   stream: accessLogStream,
   skip: function (req, res) { return res.statusCode < 400 }
 }));

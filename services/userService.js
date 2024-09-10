@@ -1,27 +1,11 @@
 import { PrismaClientKnownRequestError, PrismaClientValidationError } from "@prisma/client/runtime/library";
 import userModel from "../models/userModel.js"
-import * as yup from "yup";
 import { BadRequestException, NotFoundException, ServerException } from "../utils/customException.js";
 import hashPassword from "../utils/passwordHash.js";
 import convertRole from "../utils/convertRole.js";
-
-const userSchema = yup.object().shape({
-    username: yup.string().trim().required("Username is required"),
-    password: yup.string().min(8).trim().required("Password is required"),
-    email: yup.string().email().required("Email is required"),
-    role: yup.string().oneOf(["Team_724", "Head", "Member"], "User role should be one of this options: Team_724, Head, Member").required("User role is required")
-})
-
-const updateUserSchema = yup.object().shape({
-    username: yup.string().trim(),
-    password: yup.string().min(8).trim(),
-    email: yup.string().email(),
-    role_id: yup.string().oneOf(["Team_724", "Head", "Member"], "User role should be one of this options: Team_724, Head, Member")
-})
-
-const getUserSchema = yup.number()
-
-const getAllUsersRoleSchema = yup.string().oneOf(["Admin", "Team_724", "Head", "Member"], "Role is not valid")
+import { handleError } from "../utils/errorHandler.js"
+import paginate from "../utils/paginator.js";
+import { userSchema, updateUserSchema, getUserSchema, getAllUsersRoleSchema } from "../utils/schema.js";
 
 /**
  * @param {import('express').Request} req 
@@ -38,24 +22,8 @@ const createUser = async (req, res) => {
                 msg: "data validation error",
                 data: [`${error.meta.target} is not unique`]
             })
-        } else if (error instanceof yup.ValidationError) {
-            throw new BadRequestException({
-                msg: "data validation error",
-                data: error.errors
-            })
-        } else {
-            throw new ServerException({
-                msg: "Internal server error, please try again later.",
-                data: {
-                    meta: {
-                        location: 'teamService',
-                        operation: 'createUser',
-                        time: new Date().toLocaleTimeString(),
-                        date: new Date().toLocaleDateString()
-                    }
-                }
-            })
         }
+        handleError(error, "userService", "createUser")
     }
     delete user["password"]
     delete user["role_id"]
@@ -104,68 +72,35 @@ const updateUser = async (req, res) => {
             updatedData: updatedData
         })
     } catch (error) {
-        if (error instanceof yup.ValidationError) {
-            throw new BadRequestException({
-                msg: "data validation error",
-                data: error.errors
-            })
-        } else if (error instanceof PrismaClientKnownRequestError) {
-            if (error.code === "P2025") {
-                throw new NotFoundException({
-                    msg: "User not found"
-                })
-            }
-        } else if (error instanceof PrismaClientValidationError) {
-            console.log(error.message);
-
-            throw new BadRequestException({
-                msg: error.message
-            })
-        } else if (error instanceof BadRequestException) {
-            throw new BadRequestException({
-                msg: error.message
-            })
-        } else {
-            console.log(error);
-            throw new ServerException({
-                msg: "Internal server error, please try again later.",
-                data: {
-                    meta: {
-                        location: 'userService',
-                        operation: 'updateUser',
-                        time: new Date().toLocaleTimeString(),
-                        date: new Date().toLocaleDateString()
-                    }
-                }
-            })
-        }
+        handleError(error, "userService", "updateUser")
     }
 }
 
-const allUsers = async (role, team) => {
+const allUsers = async (role, team, page, pageSize, queryPage) => {
+    let users;
     try {
         await getAllUsersRoleSchema.validate(role)
-        
-        return await userModel.all(role, team);
-    } catch (error) {
-        if (error instanceof yup.ValidationError) {
-            throw new BadRequestException({
-                msg: "data validation error",
-                data: error.errors
+
+        const items = await userModel.all(role, team);
+
+        users = items.users
+        const totalItems = items.total
+        const totalPages = Math.ceil(totalItems / pageSize);
+
+        if (users.length > 0 && page > totalPages) {
+            return res.status(404).json({
+                message: `page ${page} not found.`
             })
         }
-        console.log(error);
-        throw new ServerException({
-            msg: 'Internal server error, please try again later.',
-            data: {
-                meta: {
-                    location: 'userService',
-                    operation: 'allUsers',
-                    time: new Date().toLocaleTimeString(),
-                    date: new Date().toLocaleDateString()
-                }
-            }
-        })
+
+        for (let user of users) {
+            delete user["password"]
+            delete user["role_id"]
+        }
+        
+        return queryPage == "off" ? items.users : paginate(items.users, page, pageSize, "users")
+    } catch (error) {
+        handleError(error, "userService", "allUsers")
     }
 }
 
@@ -175,24 +110,32 @@ const getUser = async (userId) => {
 
         return await userModel.findById(userId)
     } catch (error) {
-        if (error instanceof yup.ValidationError) {
+        handleError(error, "userService", "getUser")
+    }
+}
+
+const deleteUser = async (userId) => {
+    try {
+        if (isNaN(userId)) {
             throw new BadRequestException({
-                msg: "data validation error",
-                data: error.errors
+                msg: "User id must be number"
             })
         }
-        console.log(error);
-        throw new ServerException({
-            msg: 'Internal server error, please try again later.',
-            data: {
-                meta: {
-                    location: 'userService',
-                    operation: 'getUser',
-                    time: new Date().toLocaleTimeString(),
-                    date: new Date().toLocaleDateString()
-                }
-            }
-        })
+        await userModel.deleteById(userId)
+    } catch (error) {
+        handleError(error, "userService", "deleteUser")
+    }
+}
+
+const getCurrentUser = async (userId) => {
+    try {
+        let user = await userModel.findById(userId)
+        delete user["password"]
+        delete user["role_id"]
+
+        return user
+    } catch (error) {
+        handleError(error, "userService", "getCurrentUser")
     }
 }
 
@@ -200,5 +143,7 @@ export default {
     createUser,
     updateUser,
     allUsers,
-    getUser
+    getUser,
+    deleteUser,
+    getCurrentUser
 }

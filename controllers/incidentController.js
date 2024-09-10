@@ -1,4 +1,5 @@
 import incidentService from "../services/incidentService.js"
+import { returnError } from "../utils/errorHandler.js"
 
 /**
  * 
@@ -13,10 +14,7 @@ const createIncident = async (req, res) => {
 
         await incidentService.createIncident(packId, teamId, notifications)
     } catch (error) {
-        return res.status(error.code).json({
-            message: error.message,
-            data: error.data
-        })
+        return returnError(error, res)
     }
 
     return res.status(200).json({
@@ -38,10 +36,7 @@ const assignIncident = async (req, res) => {
 
         await incidentService.assignIncident(packId, headId, masterMember, members)
     } catch (error) {
-        return res.status(error.code).json({
-            message: error.message,
-            data: error.data
-        })
+        return returnError(error, res)
     }
 
     return res.status(200).json({
@@ -62,10 +57,7 @@ const resolveIncident = async (req, res) => {
 
         data = await incidentService.resolveIncident(packId, userId)
     } catch (error) {
-        return res.status(error.code).json({
-            message: error.message,
-            data: error.data
-        })
+        return returnError(error, res)
     }
 
     return res.status(200).json({

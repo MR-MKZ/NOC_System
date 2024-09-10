@@ -1,6 +1,7 @@
 import capitalize from "../utils/capitalize.js";
 import { sendIncidentPackService, sendPackService, setPackPriority } from "../services/packService.js";
 import { sendNotificationService } from "../services/notificationService.js";
+import { returnError } from "../utils/errorHandler.js";
 
 /**
  * fetch, paginate and return packs for user
@@ -12,10 +13,7 @@ const handleSendPacks = async (req, res) => {
     try {
         packs = await sendPackService(req, res);
     } catch (error) {
-        return res.status(error.code).json({
-            message: error.message,
-            data: error.data
-        })
+        return returnError(error, res)
     }
 
     return res.status(200).json(packs || [])
@@ -27,12 +25,14 @@ const handleSendPacks = async (req, res) => {
  * @param {import('express').Response} res 
  */
 const handleSendIncidentPacks = async (req, res) => {
+    let packs;
     try {
-        await sendIncidentPackService(req, res);
+        packs = await sendIncidentPackService(req, res);
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: "Internal server error" });
+        return returnError(error, res)
     }
+
+    return res.status(200).json(packs)
 }
 
 /**
@@ -41,12 +41,14 @@ const handleSendIncidentPacks = async (req, res) => {
  * @param {import('express').Response} res 
  */
 const handleSendNotifications = async (req, res) => {
+    let notifications;
     try {
-        await sendNotificationService(req, res);
+        notifications = await sendNotificationService(req, res);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        return returnError(error, res)
     }
+
+    return res.status(200).json(notifications)
 }
 
 /**
@@ -62,10 +64,7 @@ const handlePackPriority = async (req, res) => {
 
         await setPackPriority(id, priority)
     } catch (error) {
-        return res.status(error.code).json({
-            message: error.message,
-            data: error.data
-        })
+        return returnError(error, res)
     }
 
     return res.status(200).json({

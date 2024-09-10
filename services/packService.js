@@ -1,10 +1,9 @@
-import { PrismaClientKnownRequestError, PrismaClientValidationError } from "@prisma/client/runtime/library";
 import { getPack, createPack, closePack, getAllIncidents, updatePackById } from "../models/packModel.js";
 import { getAllPacks } from "../models/packModel.js";
-import { BadRequestException, NotFoundException, ServerException } from "../utils/customException.js";
+import { NotFoundException } from "../utils/customException.js";
 import paginate from "../utils/paginator.js";
 import { packPrioritySchema } from "../utils/schema.js";
-import * as yup from "yup";
+import { handleError } from "../utils/errorHandler.js";
 
 export async function handlePack(fingerprint, status, isTest) {
   if (isTest) return null;
@@ -41,7 +40,6 @@ export async function sendPackService(req, res) {
     }
 
     if (!packId) {
-      // Fetch items with pagination
       const items = await getAllPacks(status, startId)
 
       packs = items.packs
@@ -49,45 +47,22 @@ export async function sendPackService(req, res) {
       packs.sort((a, b) => {
         const dateA = new Date(a.notifications[0].receive_time);
         const dateB = new Date(b.notifications[0].receive_time);
-        return dateB - dateA; // Newest to oldest
+        return dateB - dateA;
       });
-  
+
       const totalItems = items.total
       const totalPages = Math.ceil(totalItems / pageSize);
-  
+
       if (packs.length > 0 && page > totalPages) {
         throw new NotFoundException({
           msg: `page ${page} not found.`
         })
       }
-  
+
       return req.query.page == "off" ? packs : paginate(packs, page, pageSize, "packs")
     }
   } catch (error) {
-    if (error instanceof PrismaClientValidationError) {
-      console.log(error.message);
-
-      throw new BadRequestException({
-        msg: error.message
-      })
-    } else if (error instanceof BadRequestException) {
-      throw new BadRequestException({
-        msg: error.message
-      })
-    } else {
-      console.log(error);
-      throw new ServerException({
-        msg: "Internal server error, please try again later.",
-        data: {
-          meta: {
-            location: 'packService',
-            operation: 'sendPack',
-            time: new Date().toLocaleTimeString(),
-            date: new Date().toLocaleDateString()
-          }
-        }
-      })
-    }
+    handleError(error, "packService", "sendPack")
   }
 }
 
@@ -96,36 +71,35 @@ export async function sendPackService(req, res) {
  * @param {import('express').Response} res 
  */
 export async function sendIncidentPackService(req, res) {
-  const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.size) || 5;
-  const status = req.query.status || "Alert"
-  const headId = parseInt(req.user.userId)
-  const role = req.user?.role?.name
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.size) || 5;
+    const headId = parseInt(req.user.userId)
+    const role = req.user?.role?.name
 
-  const skip = (page - 1) * pageSize;
-  const take = pageSize;
+    const items = await getAllIncidents(headId, role)
 
-  // Fetch items with pagination
-  const items = await getAllIncidents(headId, role)
+    const packs = items.packs
 
-  const packs = items.packs
+    packs.sort((a, b) => {
+      const dateA = new Date(a.notifications[0].receive_time);
+      const dateB = new Date(b.notifications[0].receive_time);
+      return dateB - dateA;
+    });
 
-  packs.sort((a, b) => {
-    const dateA = new Date(a.notifications[0].receive_time);
-    const dateB = new Date(b.notifications[0].receive_time);
-    return dateB - dateA; // Newest to oldest
-  });
+    const totalItems = items.total
+    const totalPages = Math.ceil(totalItems / pageSize);
 
-  const totalItems = items.total
-  const totalPages = Math.ceil(totalItems / pageSize);
+    if (packs.length > 0 && page > totalPages) {
+      throw new NotFoundException({
+        msg: `page ${page} not found.`
+      })
+    }
 
-  if (packs.length > 0 && page > totalPages) {
-    return res.status(404).json({
-      error: `page ${page} not found.`
-    })
+    return req.query.page == "off" ? packs : paginate(packs, page, pageSize, "incidents")
+  } catch (error) {
+    handleError(error, "packService", "sendIncidentPack")
   }
-
-  return res.status(200).json(req.query.page == "off" ? packs : paginate(packs, page, pageSize, "incidents"));
 }
 
 /**
@@ -147,30 +121,6 @@ export async function setPackPriority(packId, priority) {
       }
     })
   } catch (error) {
-    if (error instanceof yup.ValidationError) {
-      throw new BadRequestException({
-        msg: "data validation error",
-        data: error.errors
-      })
-    } else if (error instanceof PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        throw new NotFoundException({
-          msg: "Pack not found"
-        })
-      }
-    } else {
-      console.log(error);
-      throw new ServerException({
-        msg: "Internal server error, please try again later.",
-        data: {
-          meta: {
-            location: 'packService',
-            operation: 'setPackPriority',
-            time: new Date().toLocaleTimeString(),
-            date: new Date().toLocaleDateString()
-          }
-        }
-      });
-    }
+    handleError(error, "packService", "setPackPriority")
   }
 }

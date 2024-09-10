@@ -1,5 +1,5 @@
 import { prismaClientInstance as prisma } from "../config/database.js";
-import { BadRequestException, NotFoundException } from "../utils/customException.js";
+import { BadRequestException } from "../utils/customException.js";
 
 const findById = async (id) => {
     return await prisma.team.findUnique({

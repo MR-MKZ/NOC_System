@@ -1,5 +1,7 @@
 import { saveNotication } from "../models/notificationModel.js";
 import { getPackNotifications } from "../models/notificationModel.js";
+import { NotFoundException } from "../utils/customException.js";
+import { handleError } from "../utils/errorHandler.js";
 
 export function prepareNotificationData(alertData, orgId, packId) {
   return {
@@ -23,51 +25,51 @@ export async function saveNotification(notificationData) {
  * @param {import('express').Response} res 
  */
 export async function sendNotificationService(req, res) {
-  // Get page and size from query parameters (with defaults)
-  const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.size) || 5;
-  const packId = parseInt(req.params.id)
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.size) || 5;
+    const packId = parseInt(req.params.id)
 
-  // Calculate `skip` and `take`
-  const skip = (page - 1) * pageSize;
-  const take = pageSize;
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
 
-  // Fetch items with pagination
-  const items = await getPackNotifications(packId, req.query.page === "off" ? "off" : skip, take)
+    const items = await getPackNotifications(packId, req.query.page === "off" ? "off" : skip, take)
 
-  if (req.query.page == "off") {
-    if (items.length === 0) {
-      return res.status(404).json({
-        error: `pack ${packId} not found.`
+    if (req.query.page == "off") {
+      if (items.length === 0) {
+        throw new NotFoundException({
+          msg: `pack ${packId} not found.`
+        })
+      }
+
+      return items
+    }
+
+    const notifications = items.notifications
+
+    const totalItems = items.total
+    const totalPages = Math.ceil(totalItems / pageSize);
+
+    if (notifications.length > 0 && page > totalPages) {
+      throw new NotFoundException({
+        msg: `page ${page} not found.`
       })
     }
 
-    return res.status(200).json(items);
+    if (notifications.length === 0) {
+      throw new NotFoundException({
+        msg: `pack ${packId} not found.`
+      })
+    }
+
+    return {
+      page: page,
+      pageSize: notifications.length,
+      totalItems: totalItems,
+      totalPages: totalPages,
+      notifications: notifications,
+    }
+  } catch (error) {
+    handleError(error, "notificationService", "sendNotification")
   }
-
-  const notifications = items.notifications
-
-  // get the total count of items to calculate total pages
-  const totalItems = items.total
-  const totalPages = Math.ceil(totalItems / pageSize);
-
-  if (notifications.length > 0 && page > totalPages) {
-    return res.status(404).json({
-      error: `page ${page} not found.`
-    })
-  }
-
-  if (notifications.length === 0) {
-    return res.status(404).json({
-      error: `pack ${packId} not found.`
-    })
-  }
-
-  return res.status(200).json({
-    page: page,
-    pageSize: notifications.length,
-    totalItems: totalItems,
-    totalPages: totalPages,
-    notifications: notifications,
-  });
 }

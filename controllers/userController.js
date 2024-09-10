@@ -3,6 +3,7 @@ import userModel from "../models/userModel.js";
 import userService from "../services/userService.js"
 import { ServerException } from "../utils/customException.js";
 import paginate from "../utils/paginator.js"
+import { returnError } from "../utils/errorHandler.js";
 
 
 /**
@@ -15,11 +16,9 @@ const createUser = async (req, res) => {
     try {
         user = await userService.createUser(req, res)
     } catch (error) {
-        return res.status(error.code).json({
-            error: error.message,
-            data: error.data
-        })
+        return returnError(error, res)
     }
+
     return res.status(201).json({
         message: "user created successfully",
         data: user
@@ -34,24 +33,10 @@ const createUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     try {
         const userId = parseInt(req.params.id)
-        await userModel.deleteById(userId)
+        
+        await userService.deleteUser(userId)
     } catch (error) {
-        if (error instanceof PrismaClientKnownRequestError) {
-            if (error.code === "P2025") {
-                return res.status(404).json({
-                    message: "User not found"
-                })
-            }
-        } else if (error instanceof PrismaClientValidationError) {
-            return res.status(400).json({
-                message: "user id should be number"
-            })
-        } else {
-            console.log(error);
-            return res.status(500).json({
-                message: "Internal server error"
-            })
-        }
+        return returnError(error, res)
     }
 
     return res.json({
@@ -70,11 +55,9 @@ const updateUser = async (req, res) => {
         newUser = await userService.updateUser(req, res);
         delete newUser["password"]
     } catch (error) {
-        return res.status(error.code).json({
-            message: error.message,
-            data: error.data
-        })
+        return returnError(error, res)
     }
+
     return res.json({
         message: "User updated successfully",
         data: newUser
@@ -94,35 +77,12 @@ const getAllUsers = async (req, res) => {
         const role = req.query.role
         const team = req.query.team
 
-        const skip = (page - 1) * pageSize;
-        const take = pageSize;
-
-        const items = await userService.allUsers(role, team)
-
-        users = items.users
-        const totalItems = items.total
-        const totalPages = Math.ceil(totalItems / pageSize);
-
-        if (users.length > 0 && page > totalPages) {
-            return res.status(404).json({
-                message: `page ${page} not found.`
-            })
-        }
-
-        for (let user of users) {
-            delete user["password"]
-            delete user["role_id"]
-        }
-
-        return res.status(200).json(req.query.page == "off" ? items.users : paginate(items.users, page, pageSize, "users"));
+        users = await userService.allUsers(role, team, page, pageSize, req.query.page)
     } catch (error) {
-        console.log(error);
-
-        return res.status(error.code).json({
-            message: error.message,
-            data: error.data
-        })
+        return returnError(error, res)
     }
+
+    return res.status(200).json(users)
 }
 
 /**
@@ -137,13 +97,10 @@ const getUser = async (req, res) => {
 
         user = await userService.getUser(userId)
     } catch (error) {
-        return res.status(error.code).json({
-            message: error.message,
-            data: error.data
-        })
+        return returnError(error, res)
     }
 
-    res.status(200).json(user)
+    return res.status(200).json(user)
 }
 
 /**
@@ -155,24 +112,12 @@ const getCurrentUser = async (req, res) => {
     let user;
     try {
         let userId = req.user.userId
-        user = await userModel.findById(userId)
-        delete user["password"]
-        delete user["role_id"]
+        user = await userService.getCurrentUser(userId)
     } catch (error) {
-        console.log(error);
-        throw new ServerException({
-            msg: 'Internal server error, please try again later.',
-            data: {
-                meta: {
-                    location: 'userService',
-                    operation: 'getUser',
-                    time: new Date().toLocaleTimeString(),
-                    date: new Date().toLocaleDateString()
-                }
-            }
-        })
+       return returnError(error, res)
     }
-    res.status(200).json(user)
+
+    return res.status(200).json(user)
 }
 
 export default {

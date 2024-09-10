@@ -77,11 +77,6 @@ const findUsers = async (users) => {
                 in: users
             }
         },
-        // include: {
-        //     alert_pack: true,
-        //     role: true,
-        //     team: true
-        // },
         select: {
             id: true,
             username: true,

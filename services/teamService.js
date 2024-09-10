@@ -1,23 +1,17 @@
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import teamModel from "../models/teamModel.js";
 import userModel from "../models/userModel.js";
 import { BadRequestException, NotFoundException, ServerException } from "../utils/customException.js";
-import * as yup from "yup";
-
-const updateTeamValidation = yup.object().shape({
-    name: yup.string(),
-    headId: yup.number()
-})
-
-const deleteTeamValidation = yup.number()
-
-const addUserValidation = yup.object().shape({
-    userId: yup.number().required("User id is required"),
-    teamId: yup.number().required("Team id is required")
-})
+import { updateTeamValidation, deleteTeamValidation, addUserValidation } from "../utils/schema.js";
+import { handleError } from "../utils/errorHandler.js"
 
 const createTeam = async (name, head_id) => {
     try {
+        if (!name || !head_id) {
+            throw new BadRequestException({
+                msg: "team name and head id are required"
+            })
+        }
+
         if (isNaN(Number(head_id)))
             throw new BadRequestException({
                 msg: "headId must be number"
@@ -39,34 +33,18 @@ const createTeam = async (name, head_id) => {
         await userModel.addTeam(head_id, team.id)
         return await teamModel.findById(team.id)
     } catch (error) {
-        if (error instanceof PrismaClientKnownRequestError) {
-            if (error.code === "P2002") {
-                throw new BadRequestException({
-                    msg: "Team name must be unique"
-                })
-            }
-        } else if (error instanceof BadRequestException) {
-            throw new BadRequestException({
-                msg: error.message
-            })
-        }
-        console.log(error);
-        throw new ServerException({
-            msg: "Internal server error. please try again later",
-            data: {
-                meta: {
-                    location: 'teamService',
-                    operation: 'createTeam',
-                    time: new Date().toLocaleTimeString(),
-                    date: new Date().toLocaleDateString()
-                }
-            }
-        })
+        handleError(error, "teamService", "createTeam")
     }
 }
 
 const updateTeam = async (id, data) => {
     try {
+        if (!data) {
+            throw new BadRequestException({
+                msg: "data is required for editing team"
+            })
+        }
+
         let validatedData = await updateTeamValidation.validate(data)
         let updatedData = {}
 
@@ -111,40 +89,9 @@ const updateTeam = async (id, data) => {
         
         return await teamModel.findById(team.id)
     } catch (error) {
-        if (error instanceof yup.ValidationError) {
-            throw new BadRequestException({
-                msg: "data validtion error",
-                data: error.errors
-            })
-        } else if (error instanceof PrismaClientKnownRequestError) {
-            if (error.code === "P2025") {
-                console.log(error);
-                
-                throw new NotFoundException({
-                    msg: "Team not found"
-                })
-            }
-        } else if (error instanceof NotFoundException) {
-            throw new NotFoundException({
-                msg: error.message
-            })
-        } else if (error instanceof BadRequestException) {
-            throw new BadRequestException({
-                msg: error.message
-            })
-        }
         console.log(error);
-        throw new ServerException({
-            msg: "Internal server error. please try again later",
-            data: {
-                meta: {
-                    location: 'teamService',
-                    operation: 'updateTeam',
-                    time: new Date().toLocaleTimeString(),
-                    date: new Date().toLocaleDateString()
-                }
-            }
-        })
+        
+        handleError(error, "teamService", "updateTeam")
     }
 }
 
@@ -154,30 +101,7 @@ const deleteTeam = async (id) => {
 
         return await teamModel.deleteById(id)
     } catch (error) {
-        if (error instanceof yup.ValidationError) {
-            throw new BadRequestException({
-                msg: "data validation error",
-                data: error.errors
-            })
-        } else if (error instanceof PrismaClientKnownRequestError) {
-            if (error.code === "P2025") {
-                throw new NotFoundException({
-                    msg: "Team not found"
-                })
-            }
-        }
-        console.log(error);
-        throw new ServerException({
-            msg: "Internal server error. please try again later",
-            data: {
-                meta: {
-                    location: 'teamService',
-                    operation: 'deleteTeam',
-                    time: new Date().toLocaleTimeString(),
-                    date: new Date().toLocaleDateString()
-                }
-            }
-        })
+        handleError(error, "teamService", "deleteTeam")
     }
 }
 
@@ -199,34 +123,7 @@ const addUser = async (teamId, userId) => {
 
         return await teamModel.findById(teamId)
     } catch (error) {
-        if (error instanceof yup.ValidationError) {
-            throw new BadRequestException({
-                msg: "data validation error",
-                data: error.errors
-            })
-        } else if (error instanceof PrismaClientKnownRequestError) {
-            if (error.code === "P2025") {
-                throw new NotFoundException({
-                    msg: "Team not found"
-                })
-            }
-        } else if (error instanceof NotFoundException) {
-            throw new NotFoundException({
-                msg: error.message
-            })
-        }
-        console.log(error);
-        throw new ServerException({
-            msg: "Internal server error. please try again later",
-            data: {
-                meta: {
-                    location: 'teamService',
-                    operation: 'addUser',
-                    time: new Date().toLocaleTimeString(),
-                    date: new Date().toLocaleDateString()
-                }
-            }
-        })
+        handleError(error, "teamService", "addUser")
     }
 }
 
@@ -264,59 +161,44 @@ const removeUser = async (teamId, userId) => {
 
         return await teamModel.findById(teamId)
     } catch (error) {
-        if (error instanceof yup.ValidationError) {
-            throw new BadRequestException({
-                msg: "data validation error",
-                data: error.errors
-            })
-        } else if (error instanceof PrismaClientKnownRequestError) {
-            if (error.code === "P2025") {
-                console.log(error.meta);
-
-                throw new NotFoundException({
-                    msg: `Team not found`
-                })
-            }
-        } else if (error instanceof NotFoundException) {
-            throw new NotFoundException({
-                msg: error.message
-            })
-        } else if (error instanceof BadRequestException) {
-            throw new BadRequestException({
-                msg: error.message
-            })
-        }
-        console.log(error);
-        throw new ServerException({
-            msg: "Internal server error. please try again later",
-            data: {
-                meta: {
-                    location: 'teamService',
-                    operation: 'removeUser',
-                    time: new Date().toLocaleTimeString(),
-                    date: new Date().toLocaleDateString()
-                }
-            }
-        })
+        handleError(error, "teamService", "removeUser")
     }
 }
 
-const allTeams = async (skip, take) => {
+const allTeams = async (skip, take, reqPage, pageSize, page) => {
+    let teams;
     try {
-        return await teamModel.all(skip, take);
-    } catch (error) {
-        console.log(error);
-        throw new ServerException({
-            msg: 'Internal server error, please try again later.',
-            data: {
-                meta: {
-                    location: 'teamService',
-                    operation: 'allTeams',
-                    time: new Date().toLocaleTimeString(),
-                    date: new Date().toLocaleDateString()
-                }
+        const items = await teamModel.all(reqPage == "off" ? "off" : skip, take)
+
+        if (reqPage != "off") {
+            teams = items.teams
+            const totalItems = items.total
+            const totalPages = Math.ceil(totalItems / pageSize);
+
+            if (teams.length > 0 && page > totalPages) {
+                throw new NotFoundException({
+                    msg: `page ${page} not found.`
+                })
             }
-        })
+
+            for (let team of teams) {
+                delete team["head_id"]
+            }
+
+            return {
+                page: page,
+                pageSize: teams.length,
+                totalItems: totalItems,
+                totalPages: totalPages,
+                teams: teams,
+            }
+        } else {
+            return {
+                teams: items
+            }
+        }
+    } catch (error) {
+        handleError(error, "teamService", "allTeams")
     }
 }
 
