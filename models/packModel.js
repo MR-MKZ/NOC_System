@@ -25,6 +25,17 @@ export const getPack = async ({ id, fingerprint }) => {
       where: {
         id: id,
       },
+      include: {
+        notifications: {
+          select: {
+            service: true,
+            text: true,
+            alert_create_time: true,
+            receive_time: true
+          },
+          take: 1,
+        },
+      }
     });
   } else if (fingerprint) {
     pack = await prisma.alertPack.findFirst({
@@ -34,6 +45,17 @@ export const getPack = async ({ id, fingerprint }) => {
           in: ["Alert", "Pending", "InProgress"]
         }
       },
+      include: {
+        notifications: {
+          select: {
+            service: true,
+            text: true,
+            alert_create_time: true,
+            receive_time: true
+          },
+          take: 1,
+        },
+      }
     });
   } else {
     return undefined;

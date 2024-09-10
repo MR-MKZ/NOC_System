@@ -30,28 +30,39 @@ export async function sendPackService(req, res) {
     const pageSize = parseInt(req.query.size) || 5;
     const status = req.query.status || "Alert";
     const startId = parseInt(req.query.start_id) || 1;
+    const packId = parseInt(req.body.packId)
 
-    // Fetch items with pagination
-    const items = await getAllPacks(status, startId)
+    let packs;
 
-    const packs = items.packs
+    if (packId && !isNaN(packId)) {
+      packs = await getPack({ id: packId })
 
-    packs.sort((a, b) => {
-      const dateA = new Date(a.notifications[0].receive_time);
-      const dateB = new Date(b.notifications[0].receive_time);
-      return dateB - dateA; // Newest to oldest
-    });
-
-    const totalItems = items.total
-    const totalPages = Math.ceil(totalItems / pageSize);
-
-    if (packs.length > 0 && page > totalPages) {
-      throw new NotFoundException({
-        msg: `page ${page} not found.`
-      })
+      return packs
     }
 
-    return req.query.page == "off" ? packs : paginate(packs, page, pageSize, "packs")
+    if (!packId) {
+      // Fetch items with pagination
+      const items = await getAllPacks(status, startId)
+
+      packs = items.packs
+
+      packs.sort((a, b) => {
+        const dateA = new Date(a.notifications[0].receive_time);
+        const dateB = new Date(b.notifications[0].receive_time);
+        return dateB - dateA; // Newest to oldest
+      });
+  
+      const totalItems = items.total
+      const totalPages = Math.ceil(totalItems / pageSize);
+  
+      if (packs.length > 0 && page > totalPages) {
+        throw new NotFoundException({
+          msg: `page ${page} not found.`
+        })
+      }
+  
+      return req.query.page == "off" ? packs : paginate(packs, page, pageSize, "packs")
+    }
   } catch (error) {
     if (error instanceof PrismaClientValidationError) {
       console.log(error.message);
@@ -89,7 +100,7 @@ export async function sendIncidentPackService(req, res) {
   const pageSize = parseInt(req.query.size) || 5;
   const status = req.query.status || "Alert"
   const headId = parseInt(req.user.userId)
-  const role = req.user?.role?.name  
+  const role = req.user?.role?.name
 
   const skip = (page - 1) * pageSize;
   const take = pageSize;
