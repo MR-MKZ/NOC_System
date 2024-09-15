@@ -1,6 +1,7 @@
 import teamService from '../services/teamService.js';
-import { BadRequestException } from '../utils/customException.js';
-import { returnError } from '../utils/errorHandler.js';
+import { handleError, returnError } from '../utils/errorHandler.js';
+
+import charts from "../utils/charts/charts.js";
 
 /**
  * fetch, paginate and return packs for user
@@ -129,11 +130,32 @@ const allTeams = async (req, res) => {
     return res.status(200).json(teams)
 }
 
+/**
+ * fetch, paginate and return packs for user
+ * @param {import('express').Request} req 
+ * @param {import('express').Response} res 
+ */
+const topTeams = async (req, res) => {
+    let data;
+    try {
+        data = await charts.getTopTeamsIncidentStatus()
+    } catch (error) {
+        try {
+            handleError(error, "teamController", "topTeams")
+        } catch (error) {
+            return returnError(error, res)
+        }
+    }
+
+    return res.status(200).json(data)
+}
+
 export default {
     createTeam,
     updateTeam,
     deleteTeam,
     addTeamMember,
     removeTeamMember,
-    allTeams
+    allTeams,
+    topTeams
 }

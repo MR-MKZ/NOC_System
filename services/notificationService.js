@@ -1,7 +1,10 @@
 import { saveNotication } from "../models/notificationModel.js";
 import { getPackNotifications } from "../models/notificationModel.js";
+import { getPack } from "../models/packModel.js";
 import { NotFoundException } from "../utils/customException.js";
 import { handleError } from "../utils/errorHandler.js";
+import aiInterface from "../interfaces/AiInterface.js"
+import { AxiosError } from "axios";
 
 export function prepareNotificationData(alertData, orgId, packId) {
   return {
@@ -17,7 +20,28 @@ export function prepareNotificationData(alertData, orgId, packId) {
 }
 
 export async function saveNotification(notificationData) {
-  await saveNotication(notificationData);
+  const notif = await saveNotication(notificationData);
+
+  const pack = await getPack({ id: notif.pack_id });
+  
+  let data = {
+    id: pack.id,
+    fingerprint: pack.fingerprint,
+    text: notif.text,
+    service: notif.service,
+    status: pack.status
+  }
+
+  try {
+    await aiInterface.getPredict(data)
+  } catch (error) {
+    if (!error instanceof AxiosError) {
+      throw error
+    } else {
+      console.log(error?.response?.data);
+      
+    }
+  }
 }
 
 /**

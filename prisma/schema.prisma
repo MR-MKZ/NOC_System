@@ -70,6 +70,7 @@ model AlertPack {
     elapsed_time     String?
     start_at         DateTime       @default(now())
     end_at           DateTime?
+    ai_predict       Json?
     notifications    Notification[]
     user             User[]         @relation("PackMembers")
 }

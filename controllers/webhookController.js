@@ -1,6 +1,4 @@
 import { processAlerts } from "../services/alertService.js";
-import { callAiWebhook } from "../interfaces/aiWebhook.js";
-import { handleError } from "../utils/errorHandler.js";
 import { messages } from "../config/messages.js";
 
 const webhookController = async (req, res) => {
@@ -13,7 +11,6 @@ const webhookController = async (req, res) => {
     
     return res.status(200).json({ message: "Webhook received" });
   } catch (error) {
-    console.log(error);
     if (error instanceof PrismaClientValidationError) {
       return res.status(400).json({ error: "structure is invalid" });
     } else {
